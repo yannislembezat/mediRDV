@@ -1,0 +1,85 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% block title %}Recherche medecins | MediRDV{% endblock %}
+
+{% block portal_title %}Trouver un medecin{% endblock %}
+{% block portal_summary %}Filtrez la liste par nom ou par specialite, puis ouvrez la fiche detaillee pour consulter la bio et les prochains creneaux disponibles.{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section" data-controller="search">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Catalogue medical</p>
+                <h2 class="section-title mb-0">Recherche par nom et specialite</h2>
+            </div>
+            <p class="search-count mb-0" data-search-target="count"></p>
+        </div>
+
+        <form method="get" class="row g-3 align-items-end search-toolbar">
+            <div class="col-lg-5">
+                <label class="form-label fw-semibold" for="patient_search_query">Nom ou specialite</label>
+                <input
+                    id="patient_search_query"
+                    type="search"
+                    name="search"
+                    class="form-control form-control-lg"
+                    value="{{ search ?? '' }}"
+                    placeholder="Ex. Bennani, cardiologie"
+                    data-search-target="input"
+                    data-action="input->search#refresh"
+                >
+            </div>
+            <div class="col-lg-4">
+                <label class="form-label fw-semibold" for="patient_search_specialty">Specialite</label>
+                <select
+                    id="patient_search_specialty"
+                    name="specialtyId"
+                    class="form-select form-select-lg"
+                    data-search-target="filter"
+                    data-action="change->search#refresh"
+                >
+                    <option value="">Toutes les specialites</option>
+                    {% for specialty in specialties %}
+                        <option value="{{ specialty.id }}" {{ specialtyId == specialty.id ? 'selected' : '' }}>
+                            {{ specialty.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg flex-grow-1">Appliquer</button>
+                <a class="btn btn-outline-primary btn-lg" href="{{ path('patient_search') }}">Reset</a>
+            </div>
+        </form>
+
+        <div class="row g-4">
+            {% for doctor in doctors %}
+                <div
+                    class="col-md-6 col-xl-4"
+                    data-search-target="item"
+                    data-search-text="{{ (doctor.displayName ~ ' ' ~ doctor.specialty.name ~ ' ' ~ (doctor.officeLocation ?: '') ~ ' ' ~ (doctor.bio ?: ''))|lower }}"
+                    data-search-category="{{ doctor.specialty.id }}"
+                >
+                    {{ component('shared:doctor_card', {
+                        doctor: doctor,
+                        actionLabel: 'Voir la fiche',
+                        actionHref: path('patient_doctor', { id: doctor.id }),
+                        tags: [
+                            doctor.officeLocation ?: 'Cabinet a confirmer',
+                            doctor.consultationDuration ~ ' min',
+                            doctor.yearsExperience ? doctor.yearsExperience ~ ' ans d experience' : 'Experience a confirmer'
+                        ]
+                    }) }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="{{ doctors is not empty ? 'd-none' : '' }} mt-2" data-search-target="empty">
+            {{ component('shared:empty_state', {
+                icon: 'bi-search',
+                title: 'Aucun medecin ne correspond aux filtres',
+                message: 'Essayez un autre nom, retirez la specialite, ou revenez au tableau de bord pour parcourir les medecins mis en avant.'
+            }) }}
+        </div>
+    </section>
+{% endblock %}

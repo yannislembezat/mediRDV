@@ -1,0 +1,82 @@
+{% extends 'doctor/_layout.html.twig' %}
+
+{% block title %}Consultation medecin | MediRDV{% endblock %}
+
+{% block portal_title %}Consultation de {{ appointment.patient ? appointment.patient.fullName : 'ce patient' }}{% endblock %}
+{% block portal_summary %}Saisissez les notes cliniques, le diagnostic et les constantes vitales. La finalisation cloture la consultation et passe le rendez-vous au statut complete.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('doctor_appointment_show', { id: appointment.id }) }}">Retour au rendez-vous</a>
+        <a class="btn btn-outline-primary" href="{{ path('doctor_prescription_add', { id: consultation.id }) }}">Editer l ordonnance</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    {% form_theme consultationForm 'bootstrap_5_layout.html.twig' %}
+
+    <section class="portal-section">
+        <div class="portal-info-grid">
+            <article class="portal-info-tile">
+                <p class="portal-info-tile__label">Patient</p>
+                <strong>{{ appointment.patient ? appointment.patient.fullName : 'Patient indisponible' }}</strong>
+                <span>{{ appointment.patient ? appointment.patient.email : 'Aucun email' }}</span>
+            </article>
+            <article class="portal-info-tile">
+                <p class="portal-info-tile__label">Horaire</p>
+                <strong>{{ appointment.dateTime|date('d/m/Y H:i') }}</strong>
+                <span>Fin prevue a {{ appointment.endTime|date('H:i') }}.</span>
+            </article>
+            <article class="portal-info-tile">
+                <p class="portal-info-tile__label">Motif initial</p>
+                <strong>{{ appointment.reason ?: 'Non renseigne' }}</strong>
+                <span>Motif saisi au moment de la demande de rendez-vous.</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Saisie clinique</p>
+                <h2 class="section-title mb-0">Notes, diagnostic et constantes vitales</h2>
+            </div>
+            {% if consultation.prescription %}
+                <span class="soft-badge is-accent">
+                    <i class="bi bi-capsule"></i>
+                    Ordonnance enregistree
+                </span>
+            {% endif %}
+        </div>
+
+        {{ form_start(consultationForm, { attr: { class: 'row g-4' } }) }}
+            <div class="col-12 col-xl-7">
+                <div class="portal-panel h-100">
+                    {{ form_row(consultationForm.notes) }}
+                    {{ form_row(consultationForm.diagnosis) }}
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-5">
+                <div class="portal-panel h-100">
+                    <p class="text-uppercase text-soft small fw-semibold mb-3">Constantes vitales</p>
+                    <div class="doctor-form-grid">
+                        {{ form_row(consultationForm.bloodPressure) }}
+                        {{ form_row(consultationForm.heartRate) }}
+                        {{ form_row(consultationForm.temperature) }}
+                        {{ form_row(consultationForm.weight) }}
+                        {{ form_row(consultationForm.oxygenSaturation) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2">
+                    {{ form_widget(consultationForm.save) }}
+                    {{ form_widget(consultationForm.finalize) }}
+                    <a class="btn btn-outline-primary" href="{{ path('doctor_prescription_add', { id: consultation.id }) }}">Completer l ordonnance</a>
+                </div>
+            </div>
+        {{ form_end(consultationForm) }}
+    </section>
+{% endblock %}

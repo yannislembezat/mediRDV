@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "test",
+  "APP_NAME": "MediRDV Test",
+  "API_BASE_URL": "http://127.0.0.1:8000/api",
+  "CONNECT_TIMEOUT_MS": "10000",
+  "RECEIVE_TIMEOUT_MS": "10000"
+}

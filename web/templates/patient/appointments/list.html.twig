@@ -1,0 +1,71 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% block title %}Mes rendez-vous | MediRDV{% endblock %}
+
+{% block portal_title %}Mes RDV{% endblock %}
+{% block portal_summary %}Suivez vos demandes en attente, vos rendez-vous confirmes et les consultations deja completees depuis une seule vue filtree par statut.{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Filtres</p>
+                <h2 class="section-title mb-0">Filtrer par statut</h2>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" href="{{ path('patient_search') }}">Nouveau rendez-vous</a>
+        </div>
+
+        <div class="portal-filter-pills">
+            <a class="portal-filter-pill {{ selectedStatus is null ? 'is-active' : '' }}" href="{{ path('patient_appointments') }}">
+                <span>Tous</span>
+                <strong>{{ statusCounts.all|default(0) }}</strong>
+            </a>
+
+            {% for status in statusOptions %}
+                <a
+                    class="portal-filter-pill {{ selectedStatus and selectedStatus.value == status.value ? 'is-active' : '' }}"
+                    href="{{ path('patient_appointments', { status: status.value }) }}"
+                >
+                    <span>{{ status.label }}</span>
+                    <strong>{{ statusCounts[status.value]|default(0) }}</strong>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Liste</p>
+                <h2 class="section-title mb-0">{{ appointments|length }} rendez-vous affiche(s)</h2>
+            </div>
+        </div>
+
+        {% if appointments is not empty %}
+            <div class="row g-4">
+                {% for appointment in appointments %}
+                    <div class="col-12 col-xl-6">
+                        {{ component('shared:appointment_card', {
+                            appointment: appointment,
+                            eyebrow: appointment.status.label,
+                            showReason: true,
+                            actionLabel: 'Voir le detail',
+                            actionHref: path('patient_appointment_show', { id: appointment.id }),
+                            meta: [
+                                appointment.medecin.officeLocation ?: 'Cabinet a confirmer',
+                                'Cree le ' ~ appointment.createdAt|date('d/m/Y'),
+                                appointment.consultation and appointment.consultation.isCompleted ? 'Dossier medical disponible' : 'Suivi en cours'
+                            ]
+                        }) }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-calendar2-week',
+                title: 'Aucun rendez-vous pour ce filtre',
+                message: 'Changez le statut selectionne ou lancez une nouvelle recherche de medecin pour demander un rendez-vous.'
+            }) }}
+        {% endif %}
+    </section>
+{% endblock %}

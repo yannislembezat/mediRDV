@@ -1,0 +1,152 @@
+{% extends 'doctor/_layout.html.twig' %}
+
+{% block title %}Planning medecin | MediRDV{% endblock %}
+
+{% block portal_title %}Agenda medecin jour / semaine{% endblock %}
+{% block portal_summary %}Consultez vos rendez-vous confirmes et completes sur la periode choisie, puis ouvrez directement la fiche patient ou la consultation depuis l agenda.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn {{ planningView == 'week' ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ path('doctor_planning', { view: 'week', date: planningDate|date('Y-m-d') }) }}">Vue semaine</a>
+        <a class="btn {{ planningView == 'day' ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ path('doctor_planning', { view: 'day', date: planningDate|date('Y-m-d') }) }}">Vue jour</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-md-6 col-xl-4">
+                <article class="portal-kpi">
+                    <span class="portal-kpi__icon">
+                        <i class="bi bi-calendar2-check"></i>
+                    </span>
+                    <div>
+                        <p class="portal-kpi__label">Rendez-vous sur la periode</p>
+                        <strong class="portal-kpi__value">{{ periodAppointments|length }}</strong>
+                    </div>
+                </article>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <article class="portal-kpi">
+                    <span class="portal-kpi__icon">
+                        <i class="bi bi-calendar-day"></i>
+                    </span>
+                    <div>
+                        <p class="portal-kpi__label">Charge du jour cible</p>
+                        <strong class="portal-kpi__value">{{ todayCount }}</strong>
+                    </div>
+                </article>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <article class="portal-kpi">
+                    <span class="portal-kpi__icon">
+                        <i class="bi bi-people"></i>
+                    </span>
+                    <div>
+                        <p class="portal-kpi__label">Patients suivis</p>
+                        <strong class="portal-kpi__value">{{ uniquePatientCount }}</strong>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section id="planning" class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Periode</p>
+                <h2 class="section-title mb-1">{{ planningRangeLabel }}</h2>
+                <p class="text-soft mb-0">Navigation rapide entre les jours et les semaines de consultation.</p>
+            </div>
+
+            <div class="doctor-schedule-toolbar">
+                <a class="btn btn-outline-primary" href="{{ path('doctor_planning', { view: planningView, date: previousDate|date('Y-m-d') }) }}">
+                    <i class="bi bi-arrow-left"></i>
+                    Precedent
+                </a>
+                <a class="btn btn-outline-primary" href="{{ path('doctor_planning', { view: planningView, date: 'now'|date('Y-m-d') }) }}">Aujourd hui</a>
+                <a class="btn btn-outline-primary" href="{{ path('doctor_planning', { view: planningView, date: nextDate|date('Y-m-d') }) }}">
+                    Suivant
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        {% if planningDays is not empty %}
+            {% if planningView == 'week' %}
+                <div class="doctor-week-grid">
+                    {% for day in planningDays %}
+                        <article class="doctor-schedule-day {{ day.appointments is empty ? 'is-empty' : '' }}">
+                            <div class="doctor-schedule-day__header">
+                                <div>
+                                    <p class="doctor-schedule-day__eyebrow">{{ day.date|date('l') }}</p>
+                                    <h3 class="h6 mb-0">{{ day.date|date('d/m/Y') }}</h3>
+                                </div>
+                                <span class="soft-badge">{{ day.appointments|length }} rdv</span>
+                            </div>
+
+                            {% if day.appointments is not empty %}
+                                <div class="doctor-schedule-list">
+                                    {% for appointment in day.appointments %}
+                                        <a class="doctor-schedule-item" href="{{ path('doctor_appointment_show', { id: appointment.id }) }}">
+                                            <div>
+                                                <strong>{{ appointment.dateTime|date('H:i') }}</strong>
+                                                <p class="mb-0 text-soft">{{ appointment.patient.fullName }}</p>
+                                            </div>
+                                            {{ component('shared:status_badge', { status: appointment.status }) }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-soft small mb-0">Aucun rendez-vous sur cette journee.</p>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {% set day = planningDays|first %}
+                <div class="selection-summary">
+                    <div>
+                        <p class="selection-summary__label">Jour actif</p>
+                        <strong>{{ day.date|date('d/m/Y') }}</strong>
+                    </div>
+                    <div>
+                        <p class="selection-summary__label">Rendez-vous</p>
+                        <strong>{{ day.appointments|length }} consultation(s)</strong>
+                    </div>
+                </div>
+
+                {% if day.appointments is not empty %}
+                    <div class="row g-4">
+                        {% for appointment in day.appointments %}
+                            <div class="col-12">
+                                {{ component('shared:appointment_card', {
+                                    appointment: appointment,
+                                    eyebrow: 'Patient planifie',
+                                    heading: appointment.patient.fullName,
+                                    subheading: appointment.patient.email,
+                                    meta: [
+                                        appointment.patient.phone ?: 'Telephone non renseigne',
+                                        appointment.medecin.specialty.name,
+                                        appointment.consultation and appointment.consultation.isCompleted ? 'Consultation finalisee' : 'Consultation en attente'
+                                    ],
+                                    showReason: true,
+                                    actionLabel: 'Ouvrir la fiche rendez-vous',
+                                    actionHref: path('doctor_appointment_show', { id: appointment.id })
+                                }) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ component('shared:empty_state', {
+                        icon: 'bi-calendar2-heart',
+                        title: 'Aucun rendez-vous sur cette journee',
+                        message: 'Changez de date ou repassez en vue semaine pour revoir le reste de votre agenda.'
+                    }) }}
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </section>
+
+
+{% endblock %}

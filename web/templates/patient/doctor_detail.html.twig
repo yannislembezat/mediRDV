@@ -1,0 +1,140 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% block title %}{{ doctor.displayName }} | MediRDV{% endblock %}
+
+{% block portal_title %}{{ doctor.displayName }}{% endblock %}
+{% block portal_summary %}Consultez la specialite, les informations du cabinet et les prochaines disponibilites avant de lancer une demande de rendez-vous.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('patient_search') }}">Retour a la recherche</a>
+        <a class="btn btn-primary" href="{{ path('patient_booking', { id: doctor.id }) }}">Prendre un rendez-vous</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-5">
+                {{ component('shared:doctor_card', {
+                    doctor: doctor,
+                    actionLabel: 'Reserver un creneau',
+                    actionHref: path('patient_booking', { id: doctor.id }),
+                    summary: doctor.bio ?: 'Le medecin n a pas encore ajoute de presentation detaillee.',
+                    tags: [
+                        doctor.officeLocation ?: 'Cabinet a confirmer',
+                        doctor.consultationDuration ~ ' min',
+                        doctor.diploma ?: 'Diplome a confirmer'
+                    ]
+                }) }}
+            </div>
+            <div class="col-xl-7">
+                <div class="portal-panel h-100">
+                    <div class="portal-section__header mb-3">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Fiche medecin</p>
+                            <h2 class="section-title mb-0">Informations utiles</h2>
+                        </div>
+                    </div>
+
+                    <div class="portal-info-grid">
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Specialite</p>
+                            <strong>{{ doctor.specialty.name }}</strong>
+                            <span>{{ doctor.specialty.description ?: 'Description non renseignee.' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Cabinet</p>
+                            <strong>{{ doctor.officeLocation ?: 'A confirmer' }}</strong>
+                            <span>Consultations de {{ doctor.consultationDuration }} minutes.</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Experience</p>
+                            <strong>{{ doctor.yearsExperience ? doctor.yearsExperience ~ ' ans' : 'Non renseignee' }}</strong>
+                            <span>{{ doctor.diploma ?: 'Diplome non renseigne.' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">A propos</p>
+                            <strong>{{ doctor.user.fullName }}</strong>
+                            <span>{{ doctor.bio ?: 'La bio de ce medecin sera ajoutee ulterieurement.' }}</span>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Disponibilites</p>
+                <h2 class="section-title mb-0">Prochains creneaux consultables</h2>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" href="{{ path('patient_booking', { id: doctor.id }) }}">Ouvrir le formulaire de reservation</a>
+        </div>
+
+        {% if availabilityPreview is not empty %}
+            <div class="row g-4">
+                {% for day in availabilityPreview %}
+                    <div class="col-md-6 col-xl-4">
+                        <article class="record-card h-100">
+                            <div class="record-card__header">
+                                <div>
+                                    <p class="portal-info-tile__label mb-1">Date</p>
+                                    <h3 class="h6 mb-1">{{ day.date|date('d/m/Y') }}</h3>
+                                    <p class="text-soft small mb-0">{{ day.slots|length }} creneau(x) visible(s)</p>
+                                </div>
+                                <span class="soft-badge is-accent">
+                                    <i class="bi bi-clock-history"></i>
+                                    {{ doctor.consultationDuration }} min
+                                </span>
+                            </div>
+                            <div class="record-card__slots">
+                                {% for slot in day.slots %}
+                                    <span class="timeslot-chip is-static">{{ slot.label }}</span>
+                                {% endfor %}
+                            </div>
+                        </article>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-calendar-x',
+                title: 'Aucun creneau libre dans les prochains jours',
+                message: 'Ce medecin ne propose pas encore de disponibilites libres dans la fenetre de previsualisation.'
+            }) }}
+        {% endif %}
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Planning declaratif</p>
+                <h2 class="section-title mb-0">Regles de disponibilite du cabinet</h2>
+            </div>
+        </div>
+
+        {% if availabilityRules is not empty %}
+            <div class="record-list">
+                {% for rule in availabilityRules %}
+                    <article class="record-card record-card--compact">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="soft-badge">
+                                <i class="bi bi-calendar-check"></i>
+                                Disponibilite
+                            </span>
+                            <p class="mb-0">{{ rule }}</p>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-calendar3',
+                title: 'Aucune plage declaree',
+                message: 'Le planning detaille de ce medecin n est pas encore renseigne.'
+            }) }}
+        {% endif %}
+    </section>
+{% endblock %}

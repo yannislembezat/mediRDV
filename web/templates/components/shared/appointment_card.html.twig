@@ -1,0 +1,55 @@
+{% set status_value = appointment.status.value is defined ? appointment.status.value : appointment.status %}
+{% set resolved_heading = heading ?? (appointment.medecin.displayName ?? 'Rendez-vous') %}
+{% set resolved_subheading = subheading ?? (appointment.medecin.specialty.name ?? null) %}
+{% set resolved_eyebrow = eyebrow ?? 'Rendez-vous' %}
+
+<article class="appointment-card appointment-card--{{ status_value }}">
+    <div class="appointment-card__header">
+        <div>
+            <p class="appointment-card__eyebrow">{{ resolved_eyebrow }}</p>
+            <h3 class="appointment-card__title">{{ resolved_heading }}</h3>
+            {% if resolved_subheading %}
+                <p class="appointment-card__subtitle">{{ resolved_subheading }}</p>
+            {% endif %}
+        </div>
+
+        {{ component('shared:status_badge', { status: appointment.status }) }}
+    </div>
+
+    <div class="appointment-card__time">
+        <i class="bi bi-calendar3" aria-hidden="true"></i>
+        <span>{{ appointment.dateTime|date('d/m/Y') }} a {{ appointment.dateTime|date('H:i') }}</span>
+    </div>
+
+    {% if meta is not empty %}
+        <ul class="appointment-card__meta">
+            {% for item in meta %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if showReason and appointment.reason %}
+        <p class="appointment-card__note">
+            <strong>Motif :</strong>
+            {{ appointment.reason }}
+        </p>
+    {% endif %}
+
+    {% if showAdminNote and appointment.adminNote %}
+        <p class="appointment-card__note appointment-card__note--soft">
+            <strong>Note admin :</strong>
+            {{ appointment.adminNote }}
+        </p>
+    {% endif %}
+
+    {% if actionLabel %}
+        <div class="appointment-card__actions">
+            {% if actionHref %}
+                <a class="btn btn-outline-primary btn-sm" href="{{ actionHref }}">{{ actionLabel }}</a>
+            {% else %}
+                <span class="btn btn-outline-primary btn-sm disabled">{{ actionLabel }}</span>
+            {% endif %}
+        </div>
+    {% endif %}
+</article>

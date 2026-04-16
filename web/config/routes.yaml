@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../vendor/symfony/routing/Loader/schema/routing.schema.json
+
+# Route imports are split by application area so API, patient, admin,
+# and doctor features can evolve independently.
+app_home:
+    path: /
+    controller: App\Controller\HomeController
+    methods: GET
+
+api:
+    resource: routes/api.yaml
+
+patient:
+    resource: routes/patient.yaml
+
+admin:
+    resource: routes/admin.yaml
+
+doctor:
+    resource: routes/doctor.yaml

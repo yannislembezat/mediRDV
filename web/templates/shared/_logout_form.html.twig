@@ -1,0 +1,9 @@
+<form method="post" action="{{ path('app_logout') }}" class="{{ form_class|default('logout-inline') }}" data-controller="logout" data-turbo="false" data-action="submit->logout#handleSubmit">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+    <button type="submit" class="{{ button_class|default('btn btn-outline-primary') }}">
+        {% if button_icon is defined and button_icon %}
+            <i class="{{ button_icon }}" aria-hidden="true"></i>
+        {% endif %}
+        {{ button_label|default('Se deconnecter') }}
+    </button>
+</form>

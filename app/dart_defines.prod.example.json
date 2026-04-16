@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "prod",
+  "APP_NAME": "MediRDV",
+  "API_BASE_URL": "https://medirdv.fr/api",
+  "CONNECT_TIMEOUT_MS": "10000",
+  "RECEIVE_TIMEOUT_MS": "10000"
+}

@@ -1,0 +1,17 @@
+##
+## compose.prod.yaml — production overrides
+## Usage: docker compose -f compose.yaml -f compose.prod.yaml up -d
+##
+services:
+  app:
+    restart: unless-stopped
+    environment:
+      APP_ENV: prod
+    # No source bind-mount in prod — image is self-contained
+
+  nginx:
+    restart: unless-stopped
+
+  database:
+    restart: unless-stopped
+    # Do NOT expose 3306 in production — keep DB internal

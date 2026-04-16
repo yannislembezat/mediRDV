@@ -1,0 +1,100 @@
+{% extends 'base.html.twig' %}
+
+{% block body_class %}portal-body portal-body--doctor{% endblock %}
+
+{% block body %}
+    <div class="portal-frame container-fluid px-3 px-lg-4 py-3 py-lg-4">
+        <header class="portal-topbar portal-topbar--doctor d-flex justify-content-between align-items-center mb-4">
+            <a class="brand-lockup" href="{{ path('doctor_planning') }}">
+                <span class="brand-mark">
+                    <i class="bi bi-heart-pulse"></i>
+                </span>
+                <span class="d-none d-md-inline">
+                    <span class="brand-title">MediRDV</span>
+                    <span class="brand-subtitle">Espace medecin</span>
+                </span>
+            </a>
+
+            <div class="d-flex align-items-center gap-3">
+                {% if portal_notifications is defined and portal_notifications is not empty %}
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border-0 shadow-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                            <i class="bi bi-bell fs-5 text-primary"></i>
+                            {% if portal_unread_notifications is defined and portal_unread_notifications > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                                    {{ portal_unread_notifications }}
+                                    <span class="visually-hidden">Notifications non lues</span>
+                                </span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 notification-dropdown" style="min-width: 350px; max-height: 500px; overflow-y: auto;">
+                            {% for notification in portal_notifications|slice(0, 6) %}
+                                <li class="px-0">
+                                    <div class="notification-item dropdown-item py-3 px-3 {{ notification.isRead ? 'is-read' : '' }}" data-notification-id="{{ notification.id }}">
+                                        <div class="d-flex gap-3">
+                                            <div class="notification-icon flex-shrink-0">
+                                                <i class="bi bi-info-circle text-primary"></i>
+                                            </div>
+                                            <div class="notification-content flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <h6 class="mb-1 fw-semibold notification-title">{{ notification.title }}</h6>
+                                                    <small class="text-nowrap text-soft notification-date">{{ notification.createdAt|date('d/m') }}</small>
+                                                </div>
+                                                <p class="mb-1 text-muted small notification-message">{{ notification.message }}</p>
+                                                <span class="badge {{ notification.isRead ? 'bg-light text-muted' : 'bg-primary' }}">{{ notification.typeLabel }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border-0 shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-5 text-primary"></i>
+                        <span class="d-none d-md-inline fw-medium">{{ app.user ? app.user.firstName : 'Mon compte' }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li><h6 class="dropdown-header">{{ app.user ? app.user.fullName : 'Medecin MediRDV' }}</h6></li>
+                        {% if doctorProfile is defined and doctorProfile.specialty %}
+                            <li><span class="dropdown-item-text text-muted small">{{ doctorProfile.specialty.name }}</span></li>
+                            <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        <li>
+                            {% include 'shared/_logout_form.html.twig' with {
+                                button_class: 'dropdown-item py-2 text-danger',
+                                button_label: 'Se deconnecter',
+                                button_icon: 'bi bi-box-arrow-right'
+                            } only %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <div class="portal-main-stack w-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <p class="text-uppercase text-soft small fw-semibold mb-1">{% block portal_kicker %}Espace medecin{% endblock %}</p>
+                    <h1 class="h3 fw-bold text-dark mb-1">{% block portal_title %}{% endblock %}</h1>
+                    <p class="text-secondary mb-0">{% block portal_summary %}{% endblock %}</p>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    {% block portal_header_actions %}
+                        <a class="btn btn-primary shadow-sm" href="{{ path('doctor_planning') }}">
+                            <i class="bi bi-calendar-date me-1"></i> Mon planning
+                        </a>
+                    {% endblock %}
+                </div>
+            </div>
+
+            {% include 'shared/_flashes.html.twig' %}
+
+            <main class="portal-main-full w-100">
+                {% block portal_content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+{% endblock %}

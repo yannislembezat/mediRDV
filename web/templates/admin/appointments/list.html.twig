@@ -1,0 +1,144 @@
+{% extends 'admin/_layout.html.twig' %}
+
+{% block title %}Rendez-vous admin | MediRDV{% endblock %}
+
+{% block portal_title %}Pilotage des rendez-vous{% endblock %}
+{% block portal_summary %}Filtrez les demandes par date, statut et medecin pour traiter la file administrative rapidement.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('admin_dashboard') }}">Retour dashboard</a>
+        <a class="btn btn-outline-primary" href="{{ path('admin_medecins') }}">Medecins</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Filtres</p>
+                <h2 class="section-title mb-0">Date, statut et medecin</h2>
+            </div>
+            <span class="soft-badge">
+                <i class="bi bi-list-task"></i>
+                {{ appointments|length }} resultat(s)
+            </span>
+        </div>
+
+        <form method="get" class="row g-3 search-toolbar">
+            <div class="col-lg-4">
+                <label class="form-label fw-semibold" for="appointment_date">Date</label>
+                <input
+                    id="appointment_date"
+                    type="date"
+                    class="form-control form-control-lg"
+                    name="date"
+                    value="{{ selectedDate ? selectedDate|date('Y-m-d') : '' }}"
+                >
+            </div>
+            <div class="col-lg-4">
+                <label class="form-label fw-semibold" for="appointment_status">Statut</label>
+                <select id="appointment_status" name="status" class="form-select form-select-lg">
+                    <option value="">Tous les statuts</option>
+                    {% for status in statusOptions %}
+                        <option value="{{ status.value }}" {{ selectedStatus == status ? 'selected' : '' }}>{{ status.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-4">
+                <label class="form-label fw-semibold" for="appointment_doctor">Medecin</label>
+                <select id="appointment_doctor" name="doctor" class="form-select form-select-lg">
+                    <option value="">Tous les medecins</option>
+                    {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}" {{ selectedDoctorId == doctor.id ? 'selected' : '' }}>{{ doctor.displayName }} · {{ doctor.specialty.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+                <button type="submit" class="btn btn-primary">Appliquer les filtres</button>
+                <a class="btn btn-outline-primary" href="{{ path('admin_appointments') }}">Reinitialiser</a>
+            </div>
+        </form>
+
+        <div class="portal-filter-pills">
+            <a class="portal-filter-pill {{ selectedStatus is same as(null) ? 'is-active' : '' }}" href="{{ path('admin_appointments', {
+                date: selectedDate ? selectedDate|date('Y-m-d') : null,
+                doctor: selectedDoctorId
+            }) }}">
+                <span>Tous</span>
+                <strong>{{ statusCounts.all }}</strong>
+            </a>
+            {% for status in statusOptions %}
+                <a class="portal-filter-pill {{ selectedStatus == status ? 'is-active' : '' }}" href="{{ path('admin_appointments', {
+                    status: status.value,
+                    date: selectedDate ? selectedDate|date('Y-m-d') : null,
+                    doctor: selectedDoctorId
+                }) }}">
+                    <span>{{ status.label }}</span>
+                    <strong>{{ attribute(statusCounts, status.value) }}</strong>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Liste</p>
+                <h2 class="section-title mb-0">Rendez-vous admin</h2>
+            </div>
+        </div>
+
+        {% if appointments is not empty %}
+            <div class="portal-panel admin-table-shell p-0">
+                <table class="table table-hover align-middle mb-0 admin-table">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3">Date</th>
+                            <th class="px-4 py-3">Patient</th>
+                            <th class="px-4 py-3">Medecin</th>
+                            <th class="px-4 py-3">Statut</th>
+                            <th class="px-4 py-3">Motif</th>
+                            <th class="px-4 py-3 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <strong>{{ appointment.dateTime|date('d/m/Y') }}</strong>
+                                    <div class="text-soft small">{{ appointment.dateTime|date('H:i') }} - {{ appointment.endTime|date('H:i') }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <strong>{{ appointment.patient.fullName }}</strong>
+                                    <div class="text-soft small">{{ appointment.patient.email }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <strong>{{ appointment.medecin.displayName }}</strong>
+                                    <div class="text-soft small">{{ appointment.medecin.specialty.name }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ component('shared:status_badge', { status: appointment.status }) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="text-soft">
+                                        {{ appointment.reason and appointment.reason|length > 84 ? appointment.reason|slice(0, 81) ~ '...' : (appointment.reason ?: 'Aucun motif renseigne') }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-end">
+                                    <a class="btn btn-outline-primary btn-sm" href="{{ path('admin_appointment_show', { id: appointment.id }) }}">Voir le detail</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-journal-x',
+                title: 'Aucun rendez-vous ne correspond',
+                message: 'Modifiez les filtres ou revenez a la liste complete pour reprendre le pilotage.'
+            }) }}
+        {% endif %}
+    </section>
+{% endblock %}

@@ -1,0 +1,294 @@
+{% extends 'admin/_layout.html.twig' %}
+
+{% form_theme editForm 'bootstrap_5_layout.html.twig' %}
+
+{% block title %}Fiche medecin | MediRDV{% endblock %}
+
+{% block portal_title %}Fiche de {{ doctor.displayName }}{% endblock %}
+{% block portal_summary %}Retrouvez le profil du praticien, ses indicateurs d activite et son calendrier de disponibilites.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('admin_medecins') }}">Retour au roster</a>
+        <button type="button" class="btn btn-outline-secondary shadow-sm" data-bs-toggle="modal" data-bs-target="#editDoctorModal">
+            Modifier
+        </button>
+        <a class="btn btn-outline-secondary shadow-sm" href="{{ path('admin_availability', { doctor: doctor.id }) }}">Disponibilites</a>
+        <form method="post" action="{{ path('admin_medecin_toggle', { id: doctor.id }) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('toggle_doctor_' ~ doctor.id) }}">
+            <button type="submit" class="btn {{ doctor.user.isActive ? 'btn-outline-danger' : 'btn-primary' }}">
+                {{ doctor.user.isActive ? 'Desactiver' : 'Reactiver' }}
+            </button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-6">
+                {{ component('shared:doctor_card', {
+                    doctor: doctor,
+                    summary: doctor.bio ?: 'Biographie non renseignee.'
+                }) }}
+            </div>
+            <div class="col-xl-6">
+                <div class="portal-panel h-100 border-0 shadow-sm">
+                    <div class="portal-section__header mb-3">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Profil</p>
+                            <h2 class="section-title h4 mb-0">Informations du praticien</h2>
+                        </div>
+                        {{ component('shared:status_badge', {
+                            status: doctor.user.isActive ? 'confirmed' : 'cancelled',
+                            label: doctor.user.isActive ? 'Actif' : 'Inactif'
+                        }) }}
+                    </div>
+
+                    <div class="portal-info-grid">
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Contact</p>
+                            <strong>{{ doctor.user.email }}</strong>
+                            <span>{{ doctor.user.phone ?: 'Telephone non renseigne' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Cabinet</p>
+                            <strong>{{ doctor.officeLocation ?: 'Cabinet a confirmer' }}</strong>
+                            <span>{{ doctor.specialty.name }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Consultation</p>
+                            <strong>{{ doctor.consultationDuration }} min</strong>
+                            <span>{{ doctor.diploma ?: 'Diplome non renseigne' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Experience</p>
+                            <strong>{{ doctor.yearsExperience is not null ? doctor.yearsExperience ~ ' ans' : 'A confirmer' }}</strong>
+                            <span>{{ doctor.user.address ?: 'Adresse non renseignee' }}</span>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Statistiques</p>
+                <h2 class="section-title mb-0">Indicateurs du praticien</h2>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-xl-3">
+                <article class="portal-kpi">
+                    <span class="portal-kpi__icon"><i class="bi bi-journal-medical"></i></span>
+                    <div>
+                        <p class="portal-kpi__label">Rendez-vous total</p>
+                        <strong class="portal-kpi__value">{{ stats.total }}</strong>
+                    </div>
+                </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <article class="portal-kpi">
+                    <span class="portal-kpi__icon"><i class="bi bi-hourglass-split"></i></span>
+                    <div>
+                        <p class="portal-kpi__label">En attente</p>
+                        <strong class="portal-kpi__value">{{ stats.pending }}</strong>
+                    </div>
+                </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <article class="portal-kpi">
+                    <span class="portal-kpi__icon"><i class="bi bi-patch-check"></i></span>
+                    <div>
+                        <p class="portal-kpi__label">Confirmes</p>
+                        <strong class="portal-kpi__value">{{ stats.confirmed }}</strong>
+                    </div>
+                </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <article class="portal-kpi">
+                    <span class="portal-kpi__icon"><i class="bi bi-calendar-week"></i></span>
+                    <div>
+                        <p class="portal-kpi__label">Creneaux actifs</p>
+                        <strong class="portal-kpi__value">{{ activeAvailabilityCount }}</strong>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Rendez-vous</p>
+                <h2 class="section-title mb-0">Prochains rendez-vous du medecin</h2>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% for appointment in upcomingAppointments %}
+                <div class="col-xxl-6">
+                    {{ component('shared:appointment_card', {
+                        appointment: appointment,
+                        eyebrow: 'Suivi medecin',
+                        heading: appointment.patient.fullName,
+                        subheading: appointment.patient.email,
+                        showReason: true,
+                        actionLabel: 'Voir le dossier admin',
+                        actionHref: path('admin_appointment_show', { id: appointment.id })
+                    }) }}
+                </div>
+            {% else %}
+                <div class="col-12">
+                    {{ component('shared:empty_state', {
+                        icon: 'bi-calendar2-heart',
+                        title: 'Aucun rendez-vous a venir',
+                        message: 'Le praticien n a aucun rendez-vous pending ou confirme a venir.'
+                    }) }}
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="portal-section" data-controller="calendar">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Disponibilites</p>
+                <h2 class="section-title mb-0">Apercu des disponibilites</h2>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" href="{{ path('admin_availability', { doctor: doctor.id }) }}">Gerer les creneaux</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-7">
+                {% if availabilityPreview is not empty %}
+                    {% set initial_day = availabilityPreview[0] %}
+
+                    <div class="calendar-grid mb-4">
+                        {% for day in availabilityPreview %}
+                            <button
+                                type="button"
+                                class="calendar-day {{ loop.first ? 'is-active' : '' }}"
+                                data-calendar-target="day"
+                                data-calendar-value="{{ day.dateKey }}"
+                                data-calendar-label="{{ day.date|date('d/m/Y') }}"
+                                data-action="calendar#select"
+                            >
+                                <span class="calendar-day__eyebrow">Jour {{ loop.index }}</span>
+                                <strong>{{ day.date|date('d/m') }}</strong>
+                                <small>{{ day.slots|length }} creneaux</small>
+                            </button>
+                        {% endfor %}
+                    </div>
+
+                    <div class="selection-summary mb-4">
+                        <div>
+                            <p class="selection-summary__label">Date observee</p>
+                            <strong data-calendar-target="label">{{ initial_day.date|date('d/m/Y') }}</strong>
+                        </div>
+                        <div>
+                            <p class="selection-summary__label">Date precise active</p>
+                            <strong>{{ specificAvailabilityCount }}</strong>
+                        </div>
+                    </div>
+
+                    {% for day in availabilityPreview %}
+                        <div
+                            class="{{ loop.first ? '' : 'd-none' }}"
+                            data-calendar-target="panel"
+                            data-calendar-panel="{{ day.dateKey }}"
+                        >
+                            <div class="timeslot-grid">
+                                {% for slot in day.slots %}
+                                    <span class="timeslot-chip is-static">{{ slot.label }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <input type="hidden" data-calendar-target="input" value="{{ initial_day.dateKey }}">
+                {% else %}
+                    {{ component('shared:empty_state', {
+                        icon: 'bi-calendar2-x',
+                        title: 'Aucun apercu de disponibilite',
+                        message: 'Ajoutez un premier creneau pour commencer a exposer des slots libres.'
+                    }) }}
+                {% endif %}
+            </div>
+
+            <div class="col-xl-5">
+                <div class="record-list">
+                    {% for availability in availabilities|slice(0, 6) %}
+                        <article class="record-card record-card--compact">
+                            <div class="record-card__header">
+                                <strong>{{ availability.isRecurring ? 'Hebdomadaire' : 'Date precise' }}</strong>
+                                <span class="soft-badge {{ availability.isRecurring ? '' : 'is-accent' }}">
+                                    {% if availability.isRecurring %}
+                                        {{ attribute(dayLabels, availability.dayOfWeek) }}
+                                    {% else %}
+                                        {{ availability.specificDate|date('d/m/Y') }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <p class="text-soft mb-0">{{ availability.startTime|date('H:i') }} - {{ availability.endTime|date('H:i') }}</p>
+                        </article>
+                    {% else %}
+                        {{ component('shared:empty_state', {
+                            icon: 'bi-calendar2-plus',
+                            title: 'Aucune disponibilite active',
+                            message: 'Utilisez l ecran des disponibilites pour ouvrir le planning du praticien.'
+                        }) }}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Form -->
+    <div class="modal fade" id="editDoctorModal" tabindex="-1" aria-labelledby="editDoctorModalLabel" aria-hidden="true" {{ editForm.vars.submitted and not editForm.vars.valid ? 'data-bs-backdrop="static" data-bs-keyboard="false"' : '' }}>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title h4 fw-bold" id="editDoctorModalLabel">Mettre a jour le medecin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-4">
+                    {{ form_start(editForm, { attr: { class: 'row g-3' } }) }}
+                        <div class="col-md-6">{{ form_row(editForm.firstName) }}</div>
+                        <div class="col-md-6">{{ form_row(editForm.lastName) }}</div>
+                        <div class="col-12">{{ form_row(editForm.email) }}</div>
+                        <div class="col-12">{{ form_row(editForm.plainPassword) }}</div>
+                        <div class="col-md-6">{{ form_row(editForm.phone) }}</div>
+                        <div class="col-md-6">{{ form_row(editForm.dateOfBirth) }}</div>
+                        <div class="col-md-6">{{ form_row(editForm.gender) }}</div>
+                        <div class="col-12">{{ form_row(editForm.address) }}</div>
+                        <hr class="my-4">
+                        <div class="col-md-6">{{ form_row(editForm.specialty) }}</div>
+                        <div class="col-md-6">{{ form_row(editForm.yearsExperience) }}</div>
+                        <div class="col-12">{{ form_row(editForm.bio) }}</div>
+                        <div class="col-md-6">{{ form_row(editForm.consultationDuration) }}</div>
+                        <div class="col-md-6">{{ form_row(editForm.officeLocation) }}</div>
+                        <div class="col-12">{{ form_row(editForm.diploma) }}</div>
+                        
+                        <div class="col-12 d-flex flex-wrap gap-3 pt-3 mt-4 border-top">
+                            <button type="submit" class="btn btn-primary px-4 py-2">Enregistrer les changements</button>
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Annuler</button>
+                        </div>
+                    {{ form_end(editForm) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if editForm.vars.submitted and not editForm.vars.valid %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modal = new bootstrap.Modal(document.getElementById('editDoctorModal'));
+                modal.show();
+            });
+        </script>
+    {% endif %}
+{% endblock %}

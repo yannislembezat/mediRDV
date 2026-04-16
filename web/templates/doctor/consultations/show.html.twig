@@ -1,0 +1,125 @@
+{% extends 'doctor/_layout.html.twig' %}
+
+{% block title %}Consultation finalisee | MediRDV{% endblock %}
+
+{% block portal_title %}Consultation finalisee{% endblock %}
+{% block portal_summary %}Compte rendu en lecture seule avec diagnostic, signes vitaux et ordonnance associee. Le rendez-vous est maintenant archive comme complet.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('doctor_appointment_show', { id: consultation.appointment.id }) }}">Retour au rendez-vous</a>
+        <a class="btn btn-outline-primary" href="{{ path('doctor_patient_record', { id: consultation.appointment.patient.id }) }}">Voir le dossier patient</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="portal-info-grid">
+            <article class="portal-info-tile">
+                <p class="portal-info-tile__label">Patient</p>
+                <strong>{{ consultation.appointment.patient.fullName }}</strong>
+                <span>{{ consultation.appointment.patient.email }}</span>
+            </article>
+            <article class="portal-info-tile">
+                <p class="portal-info-tile__label">Finalisee le</p>
+                <strong>{{ consultation.completedAt ? consultation.completedAt|date('d/m/Y H:i') : 'Date indisponible' }}</strong>
+                <span>Rendez-vous du {{ consultation.appointment.dateTime|date('d/m/Y') }}.</span>
+            </article>
+            <article class="portal-info-tile">
+                <p class="portal-info-tile__label">Statut rendez-vous</p>
+                <strong>{{ consultation.appointment.status.label() }}</strong>
+                <span>La consultation a cloture le flux de rendez-vous.</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-7">
+                <div class="portal-panel h-100">
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Compte rendu</p>
+                    <h2 class="section-title h4 mb-3">Diagnostic et notes</h2>
+
+                    <div class="record-list">
+                        <article class="record-card record-card--compact">
+                            <strong>Diagnostic</strong>
+                            <p class="mb-0 text-soft">{{ consultation.diagnosis ?: 'Aucun diagnostic detaille n a ete saisi.' }}</p>
+                        </article>
+                        <article class="record-card record-card--compact">
+                            <strong>Notes cliniques</strong>
+                            <p class="mb-0 text-soft">{{ consultation.notes ?: 'Aucune note clinique supplementaire n a ete saisie.' }}</p>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-5">
+                <div class="portal-panel h-100">
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Constantes vitales</p>
+                    <h2 class="section-title h4 mb-3">Resume de la consultation</h2>
+
+                    {% if consultation.vitalSigns %}
+                        <div class="vital-sign-grid">
+                            {% for name, value in consultation.vitalSigns %}
+                                <article class="vital-sign">
+                                    <p class="portal-info-tile__label">{{ name|replace({'_': ' '})|title }}</p>
+                                    <strong>{{ value }}</strong>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ component('shared:empty_state', {
+                            icon: 'bi-heart-pulse',
+                            title: 'Aucune constante vitale saisie',
+                            message: 'La consultation a ete finalisee sans valeurs cliniques detaillees.'
+                        }) }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Ordonnance</p>
+                <h2 class="section-title mb-0">Traitement associe</h2>
+            </div>
+        </div>
+
+        {% if consultation.prescription %}
+            {% if consultation.prescription.notes %}
+                <article class="record-card record-card--compact">
+                    <strong>Note generale</strong>
+                    <p class="mb-0 text-soft">{{ consultation.prescription.notes }}</p>
+                </article>
+            {% endif %}
+
+            <div class="prescription-list">
+                {% for item in consultation.prescription.items %}
+                    <article class="prescription-item">
+                        <div class="prescription-item__header">
+                            <div>
+                                <h3 class="h6 mb-1">{{ item.medication ? item.medication.name : (item.customName ?: 'Medicament') }}</h3>
+                                <p class="text-soft mb-0">{{ item.dosage }}</p>
+                            </div>
+                            {% if item.duration %}
+                                <span class="soft-badge">{{ item.duration }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="prescription-item__meta">
+                            <span><strong>Frequence :</strong> {{ item.frequency ?: 'Selon besoin' }}</span>
+                            <span><strong>Instructions :</strong> {{ item.instructions ?: 'Aucune instruction detaillee.' }}</span>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-capsule',
+                title: 'Aucune ordonnance associee',
+                message: 'Le patient repart sans prescription ajoutee a cette consultation.'
+            }) }}
+        {% endif %}
+    </section>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'doctor/_layout.html.twig' %}
+
+{% block title %}Ordonnance medecin | MediRDV{% endblock %}
+
+{% block portal_title %}Ordonnance de consultation{% endblock %}
+{% block portal_summary %}Renseignez le traitement, puis enregistrez ou finalisez directement la consultation depuis cette page.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('doctor_appointment_show', { id: consultation.appointment.id }) }}">Retour au rendez-vous</a>
+        <a class="btn btn-outline-primary" href="{{ path('doctor_appointment_show', { id: consultation.appointment.id }) }}">Voir le rendez-vous</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    {% form_theme prescriptionForm 'bootstrap_5_layout.html.twig' %}
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Prescription</p>
+                <h2 class="section-title mb-0">Description</h2>
+            </div>
+        </div>
+
+        {{ form_start(prescriptionForm, { attr: { class: 'row g-4' } }) }}
+            <div class="col-12">
+                <div class="portal-panel">
+                    {{ form_row(prescriptionForm.notes) }}
+                    {{ form_errors(prescriptionForm.items) }}
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="doctor-prescription-stack">
+                    {% for itemForm in prescriptionForm.items %}
+                        <div class="portal-panel doctor-prescription-item">
+                            <p class="text-uppercase text-soft small fw-semibold mb-3">Ligne {{ loop.index }}</p>
+                            <div class="row g-3">
+                                <div class="col-xl-6">
+                                    {{ form_row(itemForm.medication) }}
+                                </div>
+                                <div class="col-xl-6">
+                                    {{ form_row(itemForm.customName) }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ form_row(itemForm.dosage) }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ form_row(itemForm.frequency) }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ form_row(itemForm.duration) }}
+                                </div>
+                                <div class="col-12">
+                                    {{ form_row(itemForm.instructions) }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2">
+                    {{ form_widget(prescriptionForm.save) }}
+                    {{ form_widget(prescriptionForm.finalize) }}
+                </div>
+            </div>
+        {{ form_end(prescriptionForm) }}
+    </section>
+{% endblock %}

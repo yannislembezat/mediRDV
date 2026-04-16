@@ -1,0 +1,25 @@
+##
+## compose.override.yaml — development overrides (auto-loaded by Docker Compose)
+##
+services:
+  app:
+    # Use the live entrypoint from the bind-mounted source so edits take effect
+    # without a full image rebuild.
+    entrypoint: ["/bin/bash", "-c", "composer install --no-interaction && sed -i 's/\\r$//' /var/www/html/docker/php/entrypoint.sh && bash /var/www/html/docker/php/entrypoint.sh \"$@\"", "--"]
+    # PHP built-in server — speaks HTTP directly, no Nginx needed in dev.
+    command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: dev
+    volumes:
+      # Live-mount source so changes reflect without rebuilding the image
+      - .:/var/www/html
+      - /var/www/html/vendor          # keep container vendor intact
+      - jwt_keys:/var/www/html/config/jwt
+ 
+  database:
+    ports:
+      - "3306:3306"
+ 
+ 

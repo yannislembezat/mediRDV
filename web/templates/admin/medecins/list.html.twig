@@ -1,0 +1,154 @@
+{% extends 'admin/_layout.html.twig' %}
+
+{% form_theme createForm 'bootstrap_5_layout.html.twig' %}
+
+{% block title %}Medecins admin | MediRDV{% endblock %}
+
+{% block portal_title %}Roster medecin{% endblock %}
+{% block portal_summary %}Centralisez la creation, l edition, la consultation et l activation des medecins depuis ce roster administratif.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary shadow-sm" href="{{ path('admin_availability') }}">Disponibilites</a>
+        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createDoctorModal">
+            <i class="bi bi-person-plus me-1"></i> Nouveau medecin
+        </button>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Filtres</p>
+                <h2 class="section-title mb-0">Recherche medecin</h2>
+            </div>
+            <span class="soft-badge is-accent">
+                <i class="bi bi-people"></i>
+                {{ doctors|length }} medecin(s)
+            </span>
+        </div>
+
+        <form method="get" class="row g-3 search-toolbar">
+            <div class="col-xl-4">
+                <label class="form-label fw-semibold" for="doctor_search">Nom, email ou cabinet</label>
+                <input
+                    id="doctor_search"
+                    type="search"
+                    class="form-control"
+                    name="search"
+                    value="{{ selectedSearch }}"
+                    placeholder="Rechercher un medecin"
+                >
+            </div>
+            <div class="col-xl-4">
+                <label class="form-label fw-semibold" for="doctor_specialty">Specialite</label>
+                <select id="doctor_specialty" name="specialty" class="form-select">
+                    <option value="">Toutes les specialites</option>
+                    {% for specialty in specialties %}
+                        <option value="{{ specialty.id }}" {{ selectedSpecialtyId == specialty.id ? 'selected' : '' }}>{{ specialty.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-xl-4">
+                <label class="form-label fw-semibold" for="doctor_state">Etat du compte</label>
+                <select id="doctor_state" name="state" class="form-select">
+                    <option value="">Tous les etats</option>
+                    <option value="active" {{ selectedState is same as(true) ? 'selected' : '' }}>Actifs</option>
+                    <option value="inactive" {{ selectedState is same as(false) ? 'selected' : '' }}>Inactifs</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+                <button type="submit" class="btn btn-primary">Appliquer les filtres</button>
+                <a class="btn btn-outline-secondary" href="{{ path('admin_medecins') }}">Reinitialiser</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Liste</p>
+                <h2 class="section-title mb-0">Medecins enregistres</h2>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% for doctor in doctors %}
+                <div class="col-xl-6">
+                    <div class="doctor-stack">
+                        {{ component('shared:doctor_card', {
+                            doctor: doctor,
+                            actionLabel: 'Voir la fiche',
+                            actionHref: path('admin_medecin_show', { id: doctor.id })
+                        }) }}
+                        <div class="doctor-stack__footer border-top pt-3 mt-3">
+                            <div class="d-flex justify-content-between align-items-center w-100">
+                                {{ component('shared:status_badge', {
+                                    status: doctor.user.isActive ? 'confirmed' : 'cancelled',
+                                    label: doctor.user.isActive ? 'Actif' : 'Inactif'
+                                }) }}
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a class="btn btn-outline-primary btn-sm" href="{{ path('admin_availability', { doctor: doctor.id }) }}">Disponibilites</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    {{ component('shared:empty_state', {
+                        icon: 'bi-person-badge',
+                        title: 'Aucun medecin ne correspond',
+                        message: 'Elargissez les filtres ou creez un nouveau compte medecin.'
+                    }) }}
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Modal Form -->
+    <div class="modal fade" id="createDoctorModal" tabindex="-1" aria-labelledby="createDoctorModalLabel" aria-hidden="true" {{ createForm.vars.submitted and not createForm.vars.valid ? 'data-bs-backdrop="static" data-bs-keyboard="false"' : '' }}>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title h4 fw-bold" id="createDoctorModalLabel">Creer un nouveau medecin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-4">
+                    {{ form_start(createForm, { attr: { class: 'row g-3' } }) }}
+                        <div class="col-md-6">{{ form_row(createForm.firstName) }}</div>
+                        <div class="col-md-6">{{ form_row(createForm.lastName) }}</div>
+                        <div class="col-12">{{ form_row(createForm.email) }}</div>
+                        <div class="col-12">{{ form_row(createForm.plainPassword) }}</div>
+                        <div class="col-md-6">{{ form_row(createForm.phone) }}</div>
+                        <div class="col-md-6">{{ form_row(createForm.dateOfBirth) }}</div>
+                        <div class="col-md-6">{{ form_row(createForm.gender) }}</div>
+                        <div class="col-12">{{ form_row(createForm.address) }}</div>
+                        <hr class="my-4">
+                        <div class="col-md-6">{{ form_row(createForm.specialty) }}</div>
+                        <div class="col-md-6">{{ form_row(createForm.yearsExperience) }}</div>
+                        <div class="col-12">{{ form_row(createForm.bio) }}</div>
+                        <div class="col-md-6">{{ form_row(createForm.consultationDuration) }}</div>
+                        <div class="col-md-6">{{ form_row(createForm.officeLocation) }}</div>
+                        <div class="col-12">{{ form_row(createForm.diploma) }}</div>
+                        
+                        <div class="col-12 d-flex flex-wrap gap-3 pt-3 mt-4 border-top">
+                            <button type="submit" class="btn btn-primary px-4 py-2">Creer le medecin</button>
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Annuler</button>
+                        </div>
+                    {{ form_end(createForm) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if createForm.vars.submitted and not createForm.vars.valid %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modal = new bootstrap.Modal(document.getElementById('createDoctorModal'));
+                modal.show();
+            });
+        </script>
+    {% endif %}
+{% endblock %}

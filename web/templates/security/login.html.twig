@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion | MediRDV{% endblock %}
+
+{% block body %}
+    <main class="auth-shell container py-4 py-lg-5">
+        <div class="row g-4 align-items-stretch">
+            <div class="col-lg-5">
+                <section class="auth-side h-100">
+                    <a class="brand-lockup mb-4" href="{{ path('app_home') }}">
+                        <span class="brand-mark">
+                            <i class="bi bi-hospital"></i>
+                        </span>
+                        <span>
+                            <span class="brand-title">MediRDV</span>
+                            <span class="brand-subtitle">Connexion a la plateforme</span>
+                        </span>
+                    </a>
+                    <h1 class="hero-display fs-1 mb-3">Acceder a votre espace MediRDV.</h1>
+                    <p class="hero-summary mb-0">
+                        Connectez-vous pour rejoindre votre tableau de bord patient, administration ou medecin,
+                        selon votre role dans la plateforme.
+                    </p>
+                </section>
+            </div>
+            <div class="col-lg-7">
+                <section class="auth-card">
+                    {% include 'shared/_flashes.html.twig' %}
+
+                    {% if error %}
+                        <div class="alert alert-danger shadow-sm border-0" role="alert">
+                            {{ error.messageKey|trans(error.messageData, 'security') }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Connexion</p>
+                            <h2 class="section-title mb-0">Ouvrir une session</h2>
+                        </div>
+                        <a class="soft-badge is-accent text-decoration-none" href="{{ path('app_register') }}">
+                            <i class="bi bi-person-plus"></i>
+                            Creer un compte patient
+                        </a>
+                    </div>
+
+                    <form method="post" action="{{ path('app_login_check') }}" class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" for="login_email">Email</label>
+                            <input
+                                id="login_email"
+                                name="email"
+                                type="email"
+                                value="{{ last_username }}"
+                                autocomplete="email"
+                                required
+                                class="form-control form-control-lg"
+                            >
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" for="login_password">Mot de passe</label>
+                            <input
+                                id="login_password"
+                                name="password"
+                                type="password"
+                                autocomplete="current-password"
+                                required
+                                class="form-control form-control-lg"
+                            >
+                        </div>
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                        <div class="col-12 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 pt-2">
+                            <button type="submit" class="btn btn-primary btn-lg px-4">
+                                Se connecter
+                            </button>
+                            <p class="text-soft mb-0">
+                                Nouveau patient ?
+                                <a href="{{ path('app_register') }}">Creer un compte</a>
+                            </p>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </main>
+{% endblock %}

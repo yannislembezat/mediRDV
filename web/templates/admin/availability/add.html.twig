@@ -1,0 +1,81 @@
+{% extends 'admin/_layout.html.twig' %}
+
+{% form_theme availabilityForm 'bootstrap_5_layout.html.twig' %}
+
+{% block title %}Ajouter disponibilite | MediRDV{% endblock %}
+
+{% block portal_title %}Ajouter un creneau{% endblock %}
+{% block portal_summary %}Ouvrez un nouveau creneau de disponibilite recurrent ou ponctuel pour un medecin actif.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('admin_availability', {
+            doctor: availabilityForm.vars.value.medecin ? availabilityForm.vars.value.medecin.id : null
+        }) }}">Retour au calendrier</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-8">
+                <div class="portal-panel h-100">
+                    <div class="portal-section__header mb-3">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Formulaire</p>
+                            <h2 class="section-title h4 mb-0">Ajouter un creneau</h2>
+                        </div>
+                    </div>
+
+                    {{ form_start(availabilityForm, { attr: { class: 'row g-3' } }) }}
+                        <div class="col-12">
+                            {{ form_row(availabilityForm.medecin) }}
+                        </div>
+                        <div class="col-12">
+                            {{ form_row(availabilityForm.mode) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(availabilityForm.dayOfWeek) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(availabilityForm.specificDate) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(availabilityForm.startTime) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(availabilityForm.endTime) }}
+                        </div>
+                        <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+                            <button type="submit" class="btn btn-primary">Enregistrer le creneau</button>
+                            <a class="btn btn-outline-primary" href="{{ path('admin_availability', {
+                                doctor: availabilityForm.vars.value.medecin ? availabilityForm.vars.value.medecin.id : null
+                            }) }}">Annuler</a>
+                        </div>
+                    {{ form_end(availabilityForm) }}
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="portal-panel h-100">
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Guide</p>
+                    <h2 class="section-title h4 mb-3">Comment remplir le formulaire</h2>
+                    <div class="record-list">
+                        <article class="record-card record-card--compact">
+                            <strong>Hebdomadaire</strong>
+                            <p class="mb-0 text-soft">Selectionnez un jour de semaine et laissez la date precise vide.</p>
+                        </article>
+                        <article class="record-card record-card--compact">
+                            <strong>Date precise</strong>
+                            <p class="mb-0 text-soft">Selectionnez une date et laissez le jour de semaine vide.</p>
+                        </article>
+                        <article class="record-card record-card--compact">
+                            <strong>Heures</strong>
+                            <p class="mb-0 text-soft">La fin doit etre strictement posterieure au debut pour generer des slots valides.</p>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

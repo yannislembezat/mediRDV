@@ -1,0 +1,1 @@
+{"version":2,"defects":{"App\\Tests\\Web\\DoctorPortalTest::testDoctorPagesRenderForOwnedData":8,"App\\Tests\\Web\\DoctorPortalTest::testDoctorCannotViewForeignAppointmentConsultationOrPatientRecord":8,"App\\Tests\\Web\\DoctorPortalTest::testDoctorCanFinalizeConsultationAndCompleteAppointment":8},"times":[]}

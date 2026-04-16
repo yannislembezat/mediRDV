@@ -1,0 +1,173 @@
+{% extends 'doctor/_layout.html.twig' %}
+
+{% block title %}Detail rendez-vous medecin | MediRDV{% endblock %}
+
+{% block portal_title %}Rendez-vous du {{ appointment.dateTime|date('d/m/Y a H:i') }}{% endblock %}
+{% block portal_summary %}Retrouvez les informations du patient, le motif initial, les notes admin et les actions disponibles pour lancer ou relire la consultation.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('doctor_planning') }}">Retour au planning</a>
+        {% if appointment.patient %}
+            <a class="btn btn-outline-primary" href="{{ path('doctor_patient_record', { id: appointment.patient.id }) }}">Voir le dossier patient</a>
+        {% endif %}
+        {% if appointment.consultation and appointment.consultation.isCompleted %}
+            <a class="btn btn-outline-primary" href="{{ path('doctor_consultation_show', { id: appointment.consultation.id }) }}">Voir la consultation</a>
+        {% else %}
+            <a class="btn btn-outline-primary" href="{{ path('doctor_consultation_start', { id: appointment.id }) }}">Ouvrir la consultation</a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-4">
+                <div class="portal-panel h-100">
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Patient</p>
+                    <h2 class="section-title h4 mb-3">{{ appointment.patient ? appointment.patient.fullName : 'Patient indisponible' }}</h2>
+
+                    <dl class="profile-data-list">
+                        <div>
+                            <dt>Email</dt>
+                            <dd>{{ appointment.patient ? appointment.patient.email : 'Non renseigne' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Telephone</dt>
+                            <dd>{{ appointment.patient and appointment.patient.phone ? appointment.patient.phone : 'Non renseigne' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Date de naissance</dt>
+                            <dd>{{ appointment.patient and appointment.patient.dateOfBirth ? appointment.patient.dateOfBirth|date('d/m/Y') : 'Non renseignee' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Adresse</dt>
+                            <dd>{{ appointment.patient and appointment.patient.address ? appointment.patient.address : 'Non renseignee' }}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="col-xl-8">
+                <div class="portal-panel h-100">
+                    <div class="portal-section__header">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Contexte de rendez-vous</p>
+                            <h2 class="section-title h4 mb-0">Informations cliniques et administratives</h2>
+                        </div>
+                        {{ component('shared:status_badge', { status: appointment.status }) }}
+                    </div>
+
+                    <div class="portal-info-grid">
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Horaire</p>
+                            <strong>{{ appointment.dateTime|date('d/m/Y H:i') }}</strong>
+                            <span>Fin prevue a {{ appointment.endTime|date('H:i') }}.</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Specialite</p>
+                            <strong>{{ appointment.medecin.specialty.name }}</strong>
+                            <span>{{ appointment.medecin.officeLocation ?: 'Cabinet non renseigne' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Consultation</p>
+                            <strong>
+                                {% if appointment.consultation and appointment.consultation.isCompleted %}
+                                    Finalisee
+                                {% elseif appointment.consultation %}
+                                    Brouillon en cours
+                                {% else %}
+                                    A demarrer
+                                {% endif %}
+                            </strong>
+                            <span>La finalisation termine automatiquement le rendez-vous.</span>
+                        </article>
+                    </div>
+
+                    <div class="record-list">
+                        <article class="record-card record-card--compact">
+                            <strong>Motif patient</strong>
+                            <p class="mb-0 text-soft">{{ appointment.reason ?: 'Aucun motif n a ete saisi lors de la demande.' }}</p>
+                        </article>
+
+                        {% if appointment.adminNote %}
+                            <article class="record-card record-card--compact">
+                                <strong>Note admin</strong>
+                                <p class="mb-0 text-soft">{{ appointment.adminNote }}</p>
+                            </article>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Historique du cabinet</p>
+                <h2 class="section-title mb-0">Autres rendez-vous avec ce patient</h2>
+            </div>
+        </div>
+
+        {% if patientHistory is not empty %}
+            <div class="row g-4">
+                {% for historyAppointment in patientHistory %}
+                    <div class="col-xl-6">
+                        {{ component('shared:appointment_card', {
+                            appointment: historyAppointment,
+                            eyebrow: historyAppointment.id == appointment.id ? 'Rendez-vous courant' : 'Historique',
+                            heading: historyAppointment.patient.fullName,
+                            subheading: historyAppointment.patient.email,
+                            showReason: true,
+                            actionLabel: 'Voir la fiche',
+                            actionHref: path('doctor_appointment_show', { id: historyAppointment.id })
+                        }) }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-clock-history',
+                title: 'Aucun historique disponible',
+                message: 'Ce patient n a pas encore d autre rendez-vous rattache a votre agenda.'
+            }) }}
+        {% endif %}
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Dossier medical</p>
+                <h2 class="section-title mb-0">Dernieres consultations completes</h2>
+            </div>
+        </div>
+
+        {% if patientRecords is not empty %}
+            <div class="record-list">
+                {% for record in patientRecords %}
+                    <article class="record-card">
+                        <div class="record-card__header">
+                            <div>
+                                <strong>{{ record.completedAt ? record.completedAt|date('d/m/Y H:i') : record.appointment.dateTime|date('d/m/Y H:i') }}</strong>
+                                <p class="text-soft mb-0">{{ record.appointment.medecin.displayName }}</p>
+                            </div>
+                            {% if record.appointment.medecin.id == doctorProfile.id %}
+                                <a class="btn btn-outline-primary btn-sm" href="{{ path('doctor_consultation_show', { id: record.id }) }}">Voir</a>
+                            {% else %}
+                                <span class="soft-badge">Autre praticien</span>
+                            {% endif %}
+                        </div>
+                        <p class="record-card__excerpt mb-0">{{ record.diagnosis ?: record.notes ?: 'Aucun compte rendu detaille disponible.' }}</p>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-journal-medical',
+                title: 'Aucune consultation completee',
+                message: 'Le dossier medical detaille apparaitra ici apres une consultation finalisee.'
+            }) }}
+        {% endif %}
+    </section>
+{% endblock %}

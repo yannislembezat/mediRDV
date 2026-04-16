@@ -1,0 +1,5 @@
+doctor_controllers:
+    resource:
+        path: ../../src/Controller/Doctor/
+        namespace: App\Controller\Doctor
+    type: attribute

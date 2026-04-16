@@ -1,0 +1,9 @@
+framework:
+    messenger:
+        transports:
+            async: '%env(MESSENGER_TRANSPORT_DSN)%'
+
+        default_bus: messenger.bus.default
+
+        buses:
+            messenger.bus.default: []

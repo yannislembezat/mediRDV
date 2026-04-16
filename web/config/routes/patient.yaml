@@ -1,0 +1,5 @@
+patient_controllers:
+    resource:
+        path: ../../src/Controller/Patient/
+        namespace: App\Controller\Patient
+    type: attribute

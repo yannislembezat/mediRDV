@@ -1,0 +1,484 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: MediRDV API
+            description: REST API for the MediRDV patient mobile app and related integrations.
+            version: 1.0.0
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+            schemas:
+                ErrorResponse:
+                    type: object
+                    properties:
+                        code:
+                            type: integer
+                            example: 401
+                        message:
+                            type: string
+                            example: Authentification requise.
+                ValidationErrorResponse:
+                    type: object
+                    properties:
+                        code:
+                            type: integer
+                            example: 422
+                        message:
+                            type: string
+                            example: Les donnees fournies sont invalides.
+                        errors:
+                            type: object
+                            additionalProperties:
+                                type: array
+                                items:
+                                    type: string
+                AuthTokensResponse:
+                    type: object
+                    properties:
+                        token:
+                            type: string
+                        refreshToken:
+                            type: string
+                        refreshTokenExpiration:
+                            type: integer
+                            example: 1777777777
+                Specialty:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                            example: 1
+                        name:
+                            type: string
+                            example: Cardiologie
+                        slug:
+                            type: string
+                            example: cardiologie
+                        icon:
+                            type: string
+                            nullable: true
+                            example: heart-pulse
+                        description:
+                            type: string
+                            nullable: true
+                        displayOrder:
+                            type: integer
+                            example: 2
+                        isActive:
+                            type: boolean
+                            example: true
+                UserProfile:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                            example: 3
+                        email:
+                            type: string
+                            format: email
+                        firstName:
+                            type: string
+                        lastName:
+                            type: string
+                        fullName:
+                            type: string
+                        phone:
+                            type: string
+                            nullable: true
+                        dateOfBirth:
+                            type: string
+                            format: date
+                            nullable: true
+                        gender:
+                            type: string
+                            nullable: true
+                            example: M
+                        address:
+                            type: string
+                            nullable: true
+                        avatarUrl:
+                            type: string
+                            nullable: true
+                        roles:
+                            type: array
+                            items:
+                                type: string
+                        isActive:
+                            type: boolean
+                        createdAt:
+                            type: string
+                            format: date-time
+                        updatedAt:
+                            type: string
+                            format: date-time
+                UserProfileResponse:
+                    type: object
+                    properties:
+                        message:
+                            type: string
+                        data:
+                            $ref: '#/components/schemas/UserProfile'
+                SpecialtyCollectionResponse:
+                    type: object
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/Specialty'
+                        total:
+                            type: integer
+                            example: 12
+                DoctorSummary:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        fullName:
+                            type: string
+                            example: Dr. Fatima Zohra
+                        firstName:
+                            type: string
+                            nullable: true
+                        lastName:
+                            type: string
+                            nullable: true
+                        avatarUrl:
+                            type: string
+                            nullable: true
+                        bio:
+                            type: string
+                            nullable: true
+                        officeLocation:
+                            type: string
+                            nullable: true
+                        yearsExperience:
+                            type: integer
+                            nullable: true
+                        consultationDuration:
+                            type: integer
+                            example: 30
+                        specialty:
+                            $ref: '#/components/schemas/Specialty'
+                Availability:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        isRecurring:
+                            type: boolean
+                        dayOfWeek:
+                            type: integer
+                            nullable: true
+                            example: 1
+                        specificDate:
+                            type: string
+                            format: date
+                            nullable: true
+                        startTime:
+                            type: string
+                            example: '09:00:00'
+                        endTime:
+                            type: string
+                            example: '12:00:00'
+                        isActive:
+                            type: boolean
+                DoctorDetail:
+                    allOf:
+                        - $ref: '#/components/schemas/DoctorSummary'
+                        - type: object
+                          properties:
+                              diploma:
+                                  type: string
+                                  nullable: true
+                              availabilities:
+                                  type: array
+                                  items:
+                                      $ref: '#/components/schemas/Availability'
+                DoctorCollectionResponse:
+                    type: object
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/DoctorSummary'
+                        total:
+                            type: integer
+                        filters:
+                            type: object
+                            properties:
+                                search:
+                                    type: string
+                                    nullable: true
+                                specialtyId:
+                                    type: integer
+                                    nullable: true
+                DoctorDetailResponse:
+                    type: object
+                    properties:
+                        data:
+                            $ref: '#/components/schemas/DoctorDetail'
+                Slot:
+                    type: object
+                    properties:
+                        dateTime:
+                            type: string
+                            format: date-time
+                        endTime:
+                            type: string
+                            format: date-time
+                SlotCollectionResponse:
+                    type: object
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/Slot'
+                        date:
+                            type: string
+                            format: date
+                        medecinId:
+                            type: integer
+                        total:
+                            type: integer
+                AppointmentDoctorSummary:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        fullName:
+                            type: string
+                        specialty:
+                            type: string
+                            nullable: true
+                        avatarUrl:
+                            type: string
+                            nullable: true
+                AppointmentSummary:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        dateTime:
+                            type: string
+                            format: date-time
+                        endTime:
+                            type: string
+                            format: date-time
+                        status:
+                            type: string
+                            example: confirmed
+                        statusLabel:
+                            type: string
+                            example: Confirme
+                        reason:
+                            type: string
+                            nullable: true
+                        medecin:
+                            $ref: '#/components/schemas/AppointmentDoctorSummary'
+                        createdAt:
+                            type: string
+                            format: date-time
+                        canCancel:
+                            type: boolean
+                AppointmentDetail:
+                    allOf:
+                        - $ref: '#/components/schemas/AppointmentSummary'
+                        - type: object
+                          properties:
+                              adminNote:
+                                  type: string
+                                  nullable: true
+                              validatedAt:
+                                  type: string
+                                  format: date-time
+                                  nullable: true
+                              consultationId:
+                                  type: integer
+                                  nullable: true
+                              updatedAt:
+                                  type: string
+                                  format: date-time
+                AppointmentDetailResponse:
+                    type: object
+                    properties:
+                        message:
+                            type: string
+                        data:
+                            $ref: '#/components/schemas/AppointmentDetail'
+                AppointmentCollectionResponse:
+                    type: object
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/AppointmentSummary'
+                        total:
+                            type: integer
+                        page:
+                            type: integer
+                        limit:
+                            type: integer
+                        pages:
+                            type: integer
+                        filters:
+                            type: object
+                            properties:
+                                status:
+                                    type: array
+                                    items:
+                                        type: string
+                PrescriptionItem:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        name:
+                            type: string
+                            nullable: true
+                        medicationId:
+                            type: integer
+                            nullable: true
+                        dosage:
+                            type: string
+                        duration:
+                            type: string
+                            nullable: true
+                        frequency:
+                            type: string
+                            nullable: true
+                        instructions:
+                            type: string
+                            nullable: true
+                        displayOrder:
+                            type: integer
+                Prescription:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        notes:
+                            type: string
+                            nullable: true
+                        createdAt:
+                            type: string
+                            format: date-time
+                        items:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/PrescriptionItem'
+                MedicalRecordAppointment:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        dateTime:
+                            type: string
+                            format: date-time
+                        medecin:
+                            $ref: '#/components/schemas/AppointmentDoctorSummary'
+                MedicalRecordSummary:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        diagnosis:
+                            type: string
+                            nullable: true
+                        completedAt:
+                            type: string
+                            format: date-time
+                            nullable: true
+                        appointment:
+                            $ref: '#/components/schemas/MedicalRecordAppointment'
+                        hasPrescription:
+                            type: boolean
+                MedicalRecordDetail:
+                    allOf:
+                        - $ref: '#/components/schemas/MedicalRecordSummary'
+                        - type: object
+                          properties:
+                              notes:
+                                  type: string
+                                  nullable: true
+                              vitalSigns:
+                                  type: object
+                                  nullable: true
+                                  additionalProperties:
+                                      type: string
+                                      nullable: true
+                              prescription:
+                                  $ref: '#/components/schemas/Prescription'
+                              createdAt:
+                                  type: string
+                                  format: date-time
+                              updatedAt:
+                                  type: string
+                                  format: date-time
+                MedicalRecordCollectionResponse:
+                    type: object
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/MedicalRecordSummary'
+                        total:
+                            type: integer
+                MedicalRecordDetailResponse:
+                    type: object
+                    properties:
+                        data:
+                            $ref: '#/components/schemas/MedicalRecordDetail'
+                Notification:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        title:
+                            type: string
+                        message:
+                            type: string
+                        type:
+                            type: string
+                            example: appointment_confirmed
+                        typeLabel:
+                            type: string
+                        referenceId:
+                            type: integer
+                            nullable: true
+                        isRead:
+                            type: boolean
+                        readAt:
+                            type: string
+                            format: date-time
+                            nullable: true
+                        createdAt:
+                            type: string
+                            format: date-time
+                NotificationResponse:
+                    type: object
+                    properties:
+                        message:
+                            type: string
+                        data:
+                            $ref: '#/components/schemas/Notification'
+                NotificationCollectionResponse:
+                    type: object
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/Notification'
+                        total:
+                            type: integer
+                        limit:
+                            type: integer
+                        unreadCount:
+                            type: integer
+        security:
+            - Bearer: []
+    areas:
+        path_patterns:
+            - ^/api(?!/doc)

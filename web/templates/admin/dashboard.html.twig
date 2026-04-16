@@ -1,0 +1,106 @@
+{% extends 'admin/_layout.html.twig' %}
+
+{% block title %}Dashboard administration | MediRDV{% endblock %}
+
+{% block portal_title %}Dashboard administration{% endblock %}
+{% block portal_summary %}Suivez les validations en attente, la charge du jour et la disponibilite des praticiens depuis un seul point d entree.{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Vue synthese</p>
+                <h2 class="section-title mb-0">KPIs operationnels</h2>
+            </div>
+            <a class="soft-badge" href="{{ path('admin_appointments') }}">
+                <i class="bi bi-arrow-right-circle"></i>
+                Ouvrir la file admin
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for kpi in kpis %}
+                <div class="col-md-6 col-xl-3">
+                    <article class="portal-kpi">
+                        <span class="portal-kpi__icon">
+                            <i class="bi {{ kpi.icon }}"></i>
+                        </span>
+                        <div>
+                            <p class="portal-kpi__label">{{ kpi.label }}</p>
+                            <strong class="portal-kpi__value">{{ kpi.value }}</strong>
+                        </div>
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">File de traitement</p>
+                <h2 class="section-title mb-0">Etat global des rendez-vous</h2>
+            </div>
+        </div>
+
+        <div class="portal-filter-pills">
+            <a class="portal-filter-pill {{ statusCounts.pending > 0 ? 'is-active' : '' }}" href="{{ path('admin_appointments', { status: 'pending' }) }}">
+                <span>En attente</span>
+                <strong>{{ statusCounts.pending }}</strong>
+            </a>
+            <a class="portal-filter-pill" href="{{ path('admin_appointments', { status: 'confirmed' }) }}">
+                <span>Confirmes</span>
+                <strong>{{ statusCounts.confirmed }}</strong>
+            </a>
+            <a class="portal-filter-pill" href="{{ path('admin_appointments', { status: 'refused' }) }}">
+                <span>Refuses</span>
+                <strong>{{ statusCounts.refused }}</strong>
+            </a>
+            <a class="portal-filter-pill" href="{{ path('admin_appointments', { status: 'completed' }) }}">
+                <span>Completes</span>
+                <strong>{{ statusCounts.completed }}</strong>
+            </a>
+            <a class="portal-filter-pill" href="{{ path('admin_appointments', { status: 'cancelled' }) }}">
+                <span>Annules</span>
+                <strong>{{ statusCounts.cancelled }}</strong>
+            </a>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Priorites</p>
+                <h2 class="section-title mb-0">Demandes en attente a traiter</h2>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" href="{{ path('admin_appointments', { status: 'pending' }) }}">Voir toute la liste</a>
+        </div>
+
+        <div class="row g-4">
+            {% for appointment in pendingAppointments %}
+                <div class="col-xxl-6">
+                    {{ component('shared:appointment_card', {
+                        appointment: appointment,
+                        eyebrow: 'Validation admin',
+                        heading: appointment.patient.fullName,
+                        subheading: appointment.medecin.displayName ~ ' · ' ~ appointment.medecin.specialty.name,
+                        showReason: true,
+                        actionLabel: 'Traiter la demande',
+                        actionHref: path('admin_appointment_show', { id: appointment.id })
+                    }) }}
+                </div>
+            {% else %}
+                <div class="col-12">
+                    {{ component('shared:empty_state', {
+                        icon: 'bi-check2-circle',
+                        title: 'Aucune demande en attente',
+                        message: 'La file de validation est vide pour le moment.'
+                    }) }}
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+        </div>
+    </section>
+{% endblock %}

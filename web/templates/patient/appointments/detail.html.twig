@@ -1,0 +1,109 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% block title %}Detail rendez-vous | MediRDV{% endblock %}
+
+{% block portal_title %}Rendez-vous du {{ appointment.dateTime|date('d/m/Y') }}{% endblock %}
+{% block portal_summary %}Retrouvez ici le recapitulatif complet du rendez-vous, le motif de demande et les informations partagees par l administration.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('patient_appointments') }}">Retour a Mes RDV</a>
+        {% if appointment.consultation and appointment.consultation.isCompleted %}
+            <a class="btn btn-primary" href="{{ path('patient_record_show', { id: appointment.consultation.id }) }}">Voir le dossier medical</a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-6">
+                {{ component('shared:appointment_card', {
+                    appointment: appointment,
+                    eyebrow: 'Rendez-vous patient',
+                    showReason: true,
+                    showAdminNote: true,
+                    meta: [
+                        appointment.medecin.displayName,
+                        appointment.medecin.officeLocation ?: 'Cabinet a confirmer',
+                        'Creneau de ' ~ appointment.medecin.consultationDuration ~ ' minutes'
+                    ]
+                }) }}
+            </div>
+            <div class="col-xl-6">
+                <div class="portal-panel h-100">
+                    <div class="portal-section__header mb-3">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Suivi</p>
+                            <h2 class="section-title h4 mb-0">Informations de traitement</h2>
+                        </div>
+                    </div>
+
+                    <div class="portal-info-grid">
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Specialite</p>
+                            <strong>{{ appointment.medecin.specialty.name }}</strong>
+                            <span>{{ appointment.medecin.displayName }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Creation</p>
+                            <strong>{{ appointment.createdAt|date('d/m/Y H:i') }}</strong>
+                            <span>Demande envoyee depuis l espace patient.</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Validation admin</p>
+                            <strong>{{ appointment.validatedAt ? appointment.validatedAt|date('d/m/Y H:i') : 'En attente' }}</strong>
+                            <span>{{ appointment.validatedBy ? appointment.validatedBy.fullName : 'Aucun administrateur assigne' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Dossier medical</p>
+                            <strong>{{ appointment.consultation and appointment.consultation.isCompleted ? 'Disponible' : 'Non disponible' }}</strong>
+                            <span>
+                                {% if appointment.consultation and appointment.consultation.isCompleted %}
+                                    Consultation finalisee par le medecin.
+                                {% else %}
+                                    Le dossier apparaitra ici apres une consultation completee.
+                                {% endif %}
+                            </span>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Actions</p>
+                <h2 class="section-title mb-0">Que pouvez-vous faire ensuite ?</h2>
+            </div>
+        </div>
+
+        <div class="record-list">
+            <article class="record-card record-card--compact">
+                <strong>Suivre le statut</strong>
+                <p class="text-soft mb-0">Les changements de statut remontent egalement dans votre panneau de notifications.</p>
+            </article>
+
+            {% if appointment.status.value == 'pending' %}
+                <article class="record-card record-card--compact">
+                    <strong>Annuler la demande</strong>
+                    <p class="text-soft mb-3">Vous pouvez annuler uniquement un rendez-vous encore en attente.</p>
+                    <form method="post" action="{{ path('patient_appointment_cancel', { id: appointment.id }) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('cancel_appointment_' ~ appointment.id) }}">
+                        <button type="submit" class="btn btn-outline-danger">Annuler ce rendez-vous</button>
+                    </form>
+                </article>
+            {% endif %}
+
+            {% if appointment.consultation and appointment.consultation.isCompleted %}
+                <article class="record-card record-card--compact">
+                    <strong>Consulter le dossier medical</strong>
+                    <p class="text-soft mb-3">Les notes et l ordonnance sont deja disponibles.</p>
+                    <a class="btn btn-outline-primary" href="{{ path('patient_record_show', { id: appointment.consultation.id }) }}">Ouvrir le dossier</a>
+                </article>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends 'admin/_layout.html.twig' %}
+
+{% block title %}Disponibilites admin | MediRDV{% endblock %}
+
+{% block portal_title %}Calendrier par medecin{% endblock %}
+{% block portal_summary %}Visualisez les creneaux actifs d un praticien, son apercu de slots libres et supprimez les disponibilites obsoletes.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('admin_dashboard') }}">Retour dashboard</a>
+        <a class="btn btn-primary" href="{{ path('admin_availability_add', { doctor: selectedDoctor ? selectedDoctor.id : null }) }}">Ajouter un creneau</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Selection</p>
+                <h2 class="section-title mb-0">Choisir un medecin</h2>
+            </div>
+        </div>
+
+        <form method="get" class="row g-3 search-toolbar">
+            <div class="col-xl-6">
+                <label class="form-label fw-semibold" for="availability_doctor">Medecin</label>
+                <select id="availability_doctor" name="doctor" class="form-select form-select-lg" onchange="this.form.submit()">
+                    {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}" {{ selectedDoctor and selectedDoctor.id == doctor.id ? 'selected' : '' }}>{{ doctor.displayName }} · {{ doctor.specialty.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-xl-6 d-flex align-items-end">
+                <div class="selection-summary w-100">
+                    <div>
+                        <p class="selection-summary__label">Practicien actif</p>
+                        <strong>{{ selectedDoctor ? selectedDoctor.displayName : 'Aucun' }}</strong>
+                    </div>
+                    <div>
+                        <p class="selection-summary__label">Specialite</p>
+                        <strong>{{ selectedDoctor ? selectedDoctor.specialty.name : 'Aucune' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    {% if selectedDoctor %}
+        <section class="portal-section" data-controller="calendar">
+            <div class="portal-section__header">
+                <div>
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Apercu de slots</p>
+                    <h2 class="section-title mb-0">Disponibilites libres</h2>
+                </div>
+                <a class="btn btn-outline-primary btn-sm" href="{{ path('admin_availability_add', { doctor: selectedDoctor.id }) }}">Ajouter un creneau</a>
+            </div>
+
+            {% if availabilityPreview is not empty %}
+                {% set initial_day = availabilityPreview[0] %}
+
+                <div class="calendar-grid mb-4">
+                    {% for day in availabilityPreview %}
+                        <button
+                            type="button"
+                            class="calendar-day {{ loop.first ? 'is-active' : '' }}"
+                            data-calendar-target="day"
+                            data-calendar-value="{{ day.dateKey }}"
+                            data-calendar-label="{{ day.date|date('d/m/Y') }}"
+                            data-action="calendar#select"
+                        >
+                            <span class="calendar-day__eyebrow">Jour {{ loop.index }}</span>
+                            <strong>{{ day.date|date('d/m') }}</strong>
+                            <small>{{ day.slots|length }} creneaux</small>
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <div class="selection-summary mb-4">
+                    <div>
+                        <p class="selection-summary__label">Jour actif</p>
+                        <strong data-calendar-target="label">{{ initial_day.date|date('d/m/Y') }}</strong>
+                    </div>
+                    <div>
+                        <p class="selection-summary__label">Medecin</p>
+                        <strong>{{ selectedDoctor.displayName }}</strong>
+                    </div>
+                </div>
+
+                {% for day in availabilityPreview %}
+                    <div
+                        class="{{ loop.first ? '' : 'd-none' }}"
+                        data-calendar-target="panel"
+                        data-calendar-panel="{{ day.dateKey }}"
+                    >
+                        <div class="timeslot-grid">
+                            {% for slot in day.slots %}
+                                <span class="timeslot-chip is-static">{{ slot.label }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <input type="hidden" data-calendar-target="input" value="{{ initial_day.dateKey }}">
+            {% else %}
+                {{ component('shared:empty_state', {
+                    icon: 'bi-calendar2-x',
+                    title: 'Aucun slot libre a afficher',
+                    message: 'Ajoutez des creneaux ou reactivez le medecin pour peupler cet apercu.'
+                }) }}
+            {% endif %}
+        </section>
+
+        <section class="portal-section">
+            <div class="row g-4">
+                <div class="col-xl-6">
+                    <div class="portal-panel h-100">
+                        <div class="portal-section__header mb-3">
+                            <div>
+                                <p class="text-uppercase text-soft small fw-semibold mb-2">Hebdomadaire</p>
+                                <h2 class="section-title h4 mb-0">Creneaux recurrents</h2>
+                            </div>
+                        </div>
+
+                        <div class="record-list">
+                            {% for availability in recurringAvailabilities %}
+                                <article class="record-card record-card--compact">
+                                    <div class="record-card__header">
+                                        <strong>{{ attribute(dayLabels, availability.dayOfWeek) }}</strong>
+                                        <span class="soft-badge">{{ availability.startTime|date('H:i') }} - {{ availability.endTime|date('H:i') }}</span>
+                                    </div>
+                                    <form method="post" action="{{ path('admin_availability_delete', { id: availability.id }) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_availability_' ~ availability.id) }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer</button>
+                                    </form>
+                                </article>
+                            {% else %}
+                                {{ component('shared:empty_state', {
+                                    icon: 'bi-calendar-week',
+                                    title: 'Aucun creneau recurrent',
+                                    message: 'Ajoutez un creneau hebdomadaire pour stabiliser le planning du medecin.'
+                                }) }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-6">
+                    <div class="portal-panel h-100">
+                        <div class="portal-section__header mb-3">
+                            <div>
+                                <p class="text-uppercase text-soft small fw-semibold mb-2">Ponctuel</p>
+                                <h2 class="section-title h4 mb-0">Dates precises</h2>
+                            </div>
+                        </div>
+
+                        <div class="record-list">
+                            {% for availability in specificAvailabilities %}
+                                <article class="record-card record-card--compact">
+                                    <div class="record-card__header">
+                                        <strong>{{ availability.specificDate|date('d/m/Y') }}</strong>
+                                        <span class="soft-badge is-accent">{{ availability.startTime|date('H:i') }} - {{ availability.endTime|date('H:i') }}</span>
+                                    </div>
+                                    <form method="post" action="{{ path('admin_availability_delete', { id: availability.id }) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_availability_' ~ availability.id) }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer</button>
+                                    </form>
+                                </article>
+                            {% else %}
+                                {{ component('shared:empty_state', {
+                                    icon: 'bi-calendar-date',
+                                    title: 'Aucune date precise',
+                                    message: 'Ajoutez un creneau ponctuel pour des ouvertures exceptionnelles.'
+                                }) }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}

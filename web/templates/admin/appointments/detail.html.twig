@@ -1,0 +1,133 @@
+{% extends 'admin/_layout.html.twig' %}
+
+{% block title %}Detail rendez-vous admin | MediRDV{% endblock %}
+
+{% block portal_title %}Rendez-vous du {{ appointment.dateTime|date('d/m/Y') }}{% endblock %}
+{% block portal_summary %}Consultez le contexte du rendez-vous puis approuvez ou refusez la demande avec une note administrative si necessaire.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('admin_appointments') }}">Retour a la liste</a>
+        <a class="btn btn-outline-primary" href="{{ path('admin_medecin_show', { id: appointment.medecin.id }) }}">Voir le medecin</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-6">
+                {{ component('shared:appointment_card', {
+                    appointment: appointment,
+                    eyebrow: 'Workflow administratif',
+                    heading: appointment.patient.fullName,
+                    subheading: appointment.medecin.displayName ~ ' · ' ~ appointment.medecin.specialty.name,
+                    showReason: true,
+                    showAdminNote: true,
+                    meta: [
+                        appointment.patient.email,
+                        appointment.patient.phone ?: 'Telephone non renseigne',
+                        appointment.medecin.officeLocation ?: 'Cabinet a confirmer'
+                    ]
+                }) }}
+            </div>
+            <div class="col-xl-6">
+                <div class="portal-panel h-100">
+                    <div class="portal-section__header mb-3">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Informations de traitement</p>
+                            <h2 class="section-title h4 mb-0">Contexte administratif</h2>
+                        </div>
+                    </div>
+
+                    <div class="portal-info-grid">
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Statut</p>
+                            <strong>{{ appointment.status.label }}</strong>
+                            <span>Derniere mise a jour automatique du workflow.</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Validation admin</p>
+                            <strong>{{ appointment.validatedAt ? appointment.validatedAt|date('d/m/Y H:i') : 'Pas encore valide' }}</strong>
+                            <span>{{ appointment.validatedBy ? appointment.validatedBy.fullName : 'Aucun administrateur enregistre' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Patient</p>
+                            <strong>{{ appointment.patient.fullName }}</strong>
+                            <span>{{ appointment.patient.address ?: 'Adresse non renseignee' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Consultation</p>
+                            <strong>{{ appointment.consultation and appointment.consultation.isCompleted ? 'Finalisee' : 'Aucune consultation finalisee' }}</strong>
+                            <span>
+                                {% if appointment.consultation and appointment.consultation.isCompleted %}
+                                    Consultation terminee et dossier disponible.
+                                {% else %}
+                                    La consultation sera ouverte seulement apres confirmation.
+                                {% endif %}
+                            </span>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Decision</p>
+                <h2 class="section-title mb-0">Decision administrative</h2>
+            </div>
+        </div>
+
+        {% if appointment.status.value == 'pending' %}
+            <div class="row g-4">
+                <div class="col-xl-6">
+                    <div class="portal-panel h-100">
+                        <p class="text-uppercase text-soft small fw-semibold mb-2">Approuver</p>
+                        <h3 class="h4 mb-3">Confirmer le rendez-vous</h3>
+                        <p class="text-soft">Une nouvelle verification de disponibilite est effectuee avant la confirmation pour eviter un doublon de creneau.</p>
+
+                        <form method="post" action="{{ path('admin_appointment_approve', { id: appointment.id }) }}" class="row g-3">
+                            <input type="hidden" name="_token" value="{{ csrf_token('approve_appointment_' ~ appointment.id) }}">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" for="approve_admin_note">Note interne optionnelle</label>
+                                <textarea id="approve_admin_note" name="admin_note" class="form-control" rows="5" placeholder="Ex: validation apres verification du planning.">{{ appointment.adminNote }}</textarea>
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button type="submit" class="btn btn-primary">Approuver le rendez-vous</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-xl-6">
+                    <div class="portal-panel h-100">
+                        <p class="text-uppercase text-soft small fw-semibold mb-2">Refuser</p>
+                        <h3 class="h4 mb-3">Refuser avec motif</h3>
+                        <p class="text-soft">Le motif de refus est obligatoire et sera conserve dans la note administrative du rendez-vous.</p>
+
+                        <form method="post" action="{{ path('admin_appointment_refuse', { id: appointment.id }) }}" class="row g-3">
+                            <input type="hidden" name="_token" value="{{ csrf_token('refuse_appointment_' ~ appointment.id) }}">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" for="refuse_admin_note">Motif de refus</label>
+                                <textarea id="refuse_admin_note" name="admin_note" class="form-control" rows="5" required placeholder="Precisez pourquoi la demande ne peut pas etre acceptee.">{{ appointment.adminNote }}</textarea>
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button type="submit" class="btn btn-outline-danger">Refuser le rendez-vous</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="portal-panel">
+                {{ component('shared:empty_state', {
+                    icon: 'bi-check2-square',
+                    title: 'Decision deja enregistree',
+                    message: 'Ce rendez-vous n est plus en attente. Le workflow interdit toute nouvelle decision administrative sur ce dossier.'
+                }) }}
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

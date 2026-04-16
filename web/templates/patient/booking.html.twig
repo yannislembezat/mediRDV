@@ -1,0 +1,194 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% form_theme bookingForm 'bootstrap_5_layout.html.twig' %}
+
+{% block title %}Reservation | MediRDV{% endblock %}
+
+{% block portal_title %}Demander un rendez-vous{% endblock %}
+{% block portal_summary %}Choisissez un creneau libre et ajoutez, si besoin, le motif de consultation avant d envoyer votre demande.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('patient_doctor', { id: doctor.id }) }}">Retour a la fiche</a>
+        <a class="btn btn-outline-primary" href="{{ path('patient_search') }}">Changer de medecin</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-4">
+                {{ component('shared:doctor_card', {
+                    doctor: doctor,
+                    summary: doctor.bio ?: 'Le motif et les disponibilites selectionnes seront attaches a votre demande de rendez-vous.',
+                    tags: [
+                        doctor.specialty.name,
+                        doctor.officeLocation ?: 'Cabinet a confirmer',
+                        doctor.consultationDuration ~ ' min'
+                    ]
+                }) }}
+            </div>
+            <div class="col-xl-8">
+                <div class="portal-panel h-100">
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Rappel</p>
+                    <h2 class="section-title h4 mb-3">Comment fonctionne la demande ?</h2>
+                    <div class="record-list">
+                        <article class="record-card record-card--compact">
+                            <strong>1. Choisissez une date et un horaire libres.</strong>
+                            <p class="text-soft mb-0">Seuls les creneaux encore disponibles sont affiches.</p>
+                        </article>
+                        <article class="record-card record-card--compact">
+                            <strong>2. Ajoutez un motif si vous souhaitez donner du contexte.</strong>
+                            <p class="text-soft mb-0">Le motif apparaitra ensuite dans le detail de votre rendez-vous.</p>
+                        </article>
+                        <article class="record-card record-card--compact">
+                            <strong>3. Envoyez la demande.</strong>
+                            <p class="text-soft mb-0">Le rendez-vous sera cree en statut "En attente" jusqu a validation par l administration.</p>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% if availabilityPreview is not empty %}
+        {% set initial_day = availabilityPreview[0] %}
+        {% for day in availabilityPreview %}
+            {% if selectedDateKey == day.dateKey %}
+                {% set initial_day = day %}
+            {% endif %}
+        {% endfor %}
+
+        <section
+            class="portal-section"
+            data-controller="calendar timeslot"
+            data-action="calendar:changed->timeslot#clear"
+        >
+            <div class="portal-section__header">
+                <div>
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Reservation</p>
+                    <h2 class="section-title mb-0">Selection du creneau et envoi de la demande</h2>
+                </div>
+                <span class="soft-badge is-accent">
+                    <i class="bi bi-heart-pulse"></i>
+                    {{ doctor.specialty.name }}
+                </span>
+            </div>
+
+            {{ form_start(bookingForm) }}
+                {% if bookingForm.vars.errors|length > 0 %}
+                    <div class="alert alert-danger mb-4">{{ form_errors(bookingForm) }}</div>
+                {% endif %}
+
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="calendar-grid">
+                            {% for day in availabilityPreview %}
+                                <button
+                                    type="button"
+                                    class="calendar-day {{ day.dateKey == selectedDateKey ? 'is-active' : '' }}"
+                                    data-calendar-target="day"
+                                    data-calendar-value="{{ day.dateKey }}"
+                                    data-calendar-label="{{ day.date|date('d/m/Y') }}"
+                                    data-action="calendar#select"
+                                >
+                                    <span class="calendar-day__eyebrow">Disponibilite</span>
+                                    <strong>{{ day.date|date('d/m/Y') }}</strong>
+                                    <small>{{ day.slots|length }} creneau(x)</small>
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="selection-summary">
+                            <div>
+                                <p class="selection-summary__label">Date selectionnee</p>
+                                <strong data-calendar-target="label">{{ initial_day.date|date('d/m/Y') }}</strong>
+                            </div>
+                            <div>
+                                <p class="selection-summary__label">Horaire choisi</p>
+                                <strong data-timeslot-target="summary">{{ bookingForm.dateTime.vars.value ? 'Creneau selectionne' : 'Choisir un horaire' }}</strong>
+                            </div>
+                        </div>
+
+                        {% for day in availabilityPreview %}
+                            <div
+                                class="mt-4 {{ day.dateKey == selectedDateKey ? '' : 'd-none' }}"
+                                data-calendar-target="panel"
+                                data-calendar-panel="{{ day.dateKey }}"
+                            >
+                                <div class="timeslot-grid">
+                                    {% for slot in day.slots %}
+                                        <button
+                                            type="button"
+                                            class="timeslot-chip {{ bookingForm.dateTime.vars.value == slot.value ? 'is-selected' : '' }}"
+                                            data-timeslot-target="slot"
+                                            data-timeslot-value="{{ slot.value }}"
+                                            data-timeslot-label="{{ slot.label }}"
+                                            data-action="timeslot#select"
+                                        >
+                                            {{ slot.label }}
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <input type="hidden" data-calendar-target="input" value="{{ selectedDateKey }}">
+                        {{ form_widget(bookingForm.dateTime, { attr: { 'data-timeslot-target': 'input' } }) }}
+                        <div class="form-text text-danger">{{ form_errors(bookingForm.dateTime) }}</div>
+
+                        <div class="mt-4">
+                            {{ form_row(bookingForm.reason) }}
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-3 pt-2">
+                            <button type="submit" class="btn btn-primary">Envoyer la demande</button>
+                            <a class="btn btn-outline-primary" href="{{ path('patient_doctor', { id: doctor.id }) }}">Revenir a la fiche</a>
+                        </div>
+
+                        <p class="portal-inline-note mb-0">
+                            Votre demande sera creee en attente. Vous pourrez ensuite la suivre depuis "Mes RDV".
+                        </p>
+                    </div>
+                </div>
+            {{ form_end(bookingForm) }}
+        </section>
+    {% else %}
+        <section class="portal-section">
+            {{ component('shared:empty_state', {
+                icon: 'bi-calendar-x',
+                title: 'Aucun creneau libre pour ce medecin',
+                message: 'Revenez a la recherche pour choisir un autre medecin ou reessayez plus tard.'
+            }) }}
+        </section>
+    {% endif %}
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Planning du cabinet</p>
+                <h2 class="section-title mb-0">Rappel des plages declarees</h2>
+            </div>
+        </div>
+
+        <div class="record-list">
+            {% for rule in availabilityRules %}
+                <article class="record-card record-card--compact">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="soft-badge">
+                            <i class="bi bi-calendar-week"></i>
+                            Disponibilite
+                        </span>
+                        <p class="mb-0">{{ rule }}</p>
+                    </div>
+                </article>
+            {% else %}
+                <article class="record-card record-card--compact">
+                    <p class="mb-0 text-soft">Aucune regle de disponibilite n est visible pour le moment.</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

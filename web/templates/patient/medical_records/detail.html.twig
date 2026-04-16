@@ -1,0 +1,133 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% block title %}Detail dossier medical | MediRDV{% endblock %}
+
+{% block portal_title %}Dossier du {{ record.appointment.dateTime|date('d/m/Y') }}{% endblock %}
+{% block portal_summary %}Consultez les notes de la consultation, le diagnostic retenu et l ordonnance associee a cette visite.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" href="{{ path('patient_records') }}">Retour au dossier medical</a>
+        <a class="btn btn-outline-primary" href="{{ path('patient_appointment_show', { id: record.appointment.id }) }}">Voir le rendez-vous</a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-5">
+                <div class="portal-panel h-100">
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Consultation</p>
+                    <h2 class="section-title h4 mb-3">{{ record.appointment.medecin.displayName }}</h2>
+                    <div class="portal-info-grid">
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Specialite</p>
+                            <strong>{{ record.appointment.medecin.specialty.name }}</strong>
+                            <span>{{ record.appointment.medecin.officeLocation ?: 'Cabinet a confirmer' }}</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Date de consultation</p>
+                            <strong>{{ record.completedAt ? record.completedAt|date('d/m/Y H:i') : record.appointment.dateTime|date('d/m/Y H:i') }}</strong>
+                            <span>Rendez-vous initial le {{ record.appointment.dateTime|date('d/m/Y') }}.</span>
+                        </article>
+                        <article class="portal-info-tile">
+                            <p class="portal-info-tile__label">Motif initial</p>
+                            <strong>{{ record.appointment.reason ?: 'Non renseigne' }}</strong>
+                            <span>Motif enregistre lors de la demande de rendez-vous.</span>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-7">
+                <div class="portal-panel h-100">
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Compte rendu</p>
+                    <h2 class="section-title h4 mb-3">Notes et diagnostic</h2>
+
+                    <div class="record-list">
+                        <article class="record-card record-card--compact">
+                            <strong>Diagnostic</strong>
+                            <p class="mb-0 text-soft">{{ record.diagnosis ?: 'Aucun diagnostic detaille n a ete renseigne.' }}</p>
+                        </article>
+                        <article class="record-card record-card--compact">
+                            <strong>Notes du medecin</strong>
+                            <p class="mb-0 text-soft">{{ record.notes ?: 'Aucune note supplementaire n a ete renseignee.' }}</p>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Signes vitaux</p>
+                <h2 class="section-title mb-0">Resume clinique</h2>
+            </div>
+        </div>
+
+        {% if record.vitalSigns %}
+            <div class="vital-sign-grid">
+                {% for name, value in record.vitalSigns %}
+                    <article class="vital-sign">
+                        <p class="portal-info-tile__label">{{ name|replace({'_': ' '})|title }}</p>
+                        <strong>{{ value }}</strong>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-heart-pulse',
+                title: 'Aucun signe vital detaille',
+                message: 'Aucune mesure clinique n a ete enregistree pour cette consultation.'
+            }) }}
+        {% endif %}
+    </section>
+
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Ordonnance</p>
+                <h2 class="section-title mb-0">Traitement prescrit</h2>
+            </div>
+        </div>
+
+        {% if record.prescription %}
+            {% if record.prescription.notes %}
+                <div class="record-card record-card--compact">
+                    <strong>Note generale</strong>
+                    <p class="mb-0 text-soft">{{ record.prescription.notes }}</p>
+                </div>
+            {% endif %}
+
+            <div class="prescription-list">
+                {% for item in record.prescription.items %}
+                    {% set medication_name = item.medication ? item.medication.name : (item.customName ?: 'Medicament') %}
+                    <article class="prescription-item">
+                        <div class="prescription-item__header">
+                            <div>
+                                <h3 class="h6 mb-1">{{ medication_name }}</h3>
+                                <p class="text-soft mb-0">{{ item.dosage }}</p>
+                            </div>
+                            {% if item.duration %}
+                                <span class="soft-badge">{{ item.duration }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="prescription-item__meta">
+                            <span><strong>Frequence :</strong> {{ item.frequency ?: 'Selon besoin' }}</span>
+                            <span><strong>Instructions :</strong> {{ item.instructions ?: 'Aucune instruction detaillee.' }}</span>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-capsule',
+                title: 'Aucune ordonnance associee',
+                message: 'Le medecin n a pas ajoute de prescription a cette consultation.'
+            }) }}
+        {% endif %}
+    </section>
+{% endblock %}

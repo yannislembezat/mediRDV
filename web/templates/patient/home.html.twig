@@ -1,0 +1,61 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% block title %}Espace patient | MediRDV{% endblock %}
+
+{% block portal_title %}Bienvenue {{ user ? user.firstName : 'patient' }}{% endblock %}
+{% block portal_summary %}Consultez vos rendez-vous, explorez les medecins disponibles et lancez une demande complete depuis votre espace patient.{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Tableau de bord</p>
+                <h2 class="section-title mb-0">Prochain rendez-vous et specialites mises en avant</h2>
+            </div>
+            <span class="soft-badge">
+                <i class="bi bi-grid"></i>
+                Parcours patient actif
+            </span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-7">
+                {% if nextAppointment %}
+                    {{ component('shared:appointment_card', {
+                        appointment: nextAppointment,
+                        eyebrow: 'Prochain rendez-vous',
+                        showReason: true,
+                        actionLabel: 'Voir le detail',
+                        actionHref: path('patient_appointment_show', { id: nextAppointment.id })
+                    }) }}
+                {% else %}
+                    {{ component('shared:empty_state', {
+                        icon: 'bi-calendar2-plus',
+                        title: 'Aucun rendez-vous a venir',
+                        message: 'Commencez par rechercher un medecin pour envoyer votre premiere demande de rendez-vous.'
+                    }) }}
+                {% endif %}
+            </div>
+            <div class="col-xl-5">
+                <div class="portal-panel h-100">
+                    <div class="portal-section__header mb-3">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Specialites</p>
+                            <h3 class="h5 mb-0">Catalogue mis en avant</h3>
+                        </div>
+                    </div>
+
+                    <div class="specialty-chip-list">
+                        {% for specialty in specialties %}
+                            <span class="specialty-chip">
+                                <i class="bi {{ specialty.icon ?: 'bi-activity' }}" aria-hidden="true"></i>
+                                {{ specialty.name }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

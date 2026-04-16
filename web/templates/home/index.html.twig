@@ -1,0 +1,185 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}MediRDV | Plateforme de rendez-vous hospitaliers{% endblock %}
+
+{% block meta_description %}MediRDV est la base web de gestion des rendez-vous hospitaliers pour les patients, les administrateurs et les medecins.{% endblock %}
+
+{% block body_class %}bg-grid{% endblock %}
+
+{% block body %}
+    <header class="app-topbar" data-app-topbar>
+        <div class="container py-3">
+            <div class="d-flex flex-column gap-3 flex-lg-row align-items-lg-center justify-content-between">
+                <a class="brand-lockup" href="{{ path('app_home') }}">
+                    <span class="brand-mark">
+                        <i class="bi bi-hospital"></i>
+                    </span>
+                    <span>
+                        <span class="brand-title">MediRDV</span>
+                        <span class="brand-subtitle">Plateforme de gestion des rendez-vous hospitaliers</span>
+                    </span>
+                </a>
+                <nav class="d-flex flex-wrap gap-2 align-items-center">
+                    <a class="soft-badge" href="#espaces">Espaces metier</a>
+                    <a class="soft-badge" href="#workflow">Workflow</a>
+                    <a class="soft-badge" href="#socle">Socle web</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container py-4 py-lg-5">
+        <section class="hero-panel mb-4 mb-lg-5">
+            <div class="row g-0">
+                <div class="col-lg-8">
+                    <div class="hero-copy">
+                        <span class="eyebrow mb-3">
+                            <i class="bi bi-shield-check"></i>
+                            Base Twig et Bootstrap 5 prete pour les modules metier
+                        </span>
+                        <h1 class="hero-display mb-3">Une base MediRDV claire pour orchestrer le parcours patient.</h1>
+                        <p class="hero-summary mb-4">
+                            Le starter Symfony a ete remplace par une presentation francaise, une identite MediRDV,
+                            des tokens de design partages et un point d entree web qui servira de socle aux futurs
+                            layouts patient, administration et medecin.
+                        </p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="soft-badge"><i class="bi bi-window"></i> Web patient, admin et medecin</span>
+                            <span class="soft-badge is-accent"><i class="bi bi-phone"></i> API pour Flutter</span>
+                            <span class="soft-badge is-warning"><i class="bi bi-palette"></i> Palette et typo du rapport</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="hero-side d-flex flex-column justify-content-between gap-4">
+                        <div>
+                            <p class="text-uppercase small fw-semibold opacity-75 mb-2">Socle branche</p>
+                            <h2 class="h3 mb-3">Pret pour les prochains ecrans metier</h2>
+                            <p class="mb-0 opacity-75">
+                                Le layout central, les styles globaux et l acces a la page d accueil sont en place pour
+                                accelerer les prochains flux web.
+                            </p>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="small text-uppercase opacity-75 mb-1">Stack UI</div>
+                                    <div class="h5 mb-0">Twig + Bootstrap 5</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="small text-uppercase opacity-75 mb-1">Typographie</div>
+                                    <div class="h5 mb-0">Poppins / Inter</div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="metric-card">
+                                    <div class="small text-uppercase opacity-75 mb-1">Prochaine etape</div>
+                                    <div class="h5 mb-0">Configuration MySQL, migrations et messagerie</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="espaces" class="mb-4 mb-lg-5">
+            <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-3">
+                <div>
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Espaces metier</p>
+                    <h2 class="section-title mb-0">Trois parcours web, une meme identite produit</h2>
+                </div>
+                <p class="text-soft mb-0">
+                    Chaque espace heritera de ce socle graphique avant l integration des ecrans fonctionnels.
+                </p>
+            </div>
+            <div class="row g-4">
+                {% for audience in audiences %}
+                    <div class="col-lg-4">
+                        <article class="role-card">
+                            <span class="role-icon">
+                                <i class="bi {{ audience.icon }}"></i>
+                            </span>
+                            <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                                <h3 class="h5 mb-0">{{ audience.title }}</h3>
+                                <span class="route-pill">{{ audience.route }}</span>
+                            </div>
+                            <p class="text-soft mb-3">{{ audience.summary }}</p>
+                            <ul class="feature-list">
+                                {% for feature in audience.features %}
+                                    <li>{{ feature }}</li>
+                                {% endfor %}
+                            </ul>
+                        </article>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="workflow" class="mb-4 mb-lg-5">
+            <div class="section-card">
+                <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+                    <div>
+                        <p class="text-uppercase text-soft small fw-semibold mb-2">Workflow produit</p>
+                        <h2 class="section-title mb-0">Le parcours demande, validation, consultation, archivage</h2>
+                    </div>
+                    <span class="soft-badge is-accent">
+                        <i class="bi bi-bell"></i>
+                        Notifications et dossier medical relies au meme cycle
+                    </span>
+                </div>
+                <div class="row g-4">
+                    {% for step in workflowSteps %}
+                        <div class="col-md-6 col-xl-3">
+                            <article class="workflow-step">
+                                <span class="step-icon">
+                                    <i class="bi {{ step.icon }}"></i>
+                                </span>
+                                <h3 class="h5">{{ step.title }}</h3>
+                                <p class="text-soft mb-0">{{ step.summary }}</p>
+                            </article>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section id="socle" class="mb-4">
+            <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-3">
+                <div>
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Socle web</p>
+                    <h2 class="section-title mb-0">Ce qui est deja pret pour la suite</h2>
+                </div>
+                <span class="soft-badge is-danger">
+                    <i class="bi bi-database"></i>
+                    Le prochain chantier reste l alignement MySQL 8
+                </span>
+            </div>
+            <div class="row g-4">
+                {% for highlight in platformHighlights %}
+                    <div class="col-md-4">
+                        <article class="platform-panel">
+                            <span class="platform-icon">
+                                <i class="bi {{ highlight.icon }}"></i>
+                            </span>
+                            <h3 class="h5">{{ highlight.title }}</h3>
+                            <p class="text-soft mb-0">{{ highlight.summary }}</p>
+                        </article>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <footer class="footer-shell pt-4 pb-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                <p class="mb-0">
+                    <strong>MediRDV</strong> dispose maintenant d un shell web coherent avec le rapport technique :
+                    marque produit, Bootstrap 5, Bootstrap Icons, typographie et styles partages.
+                </p>
+                <p class="mb-0">Les pages fonctionnelles patient, admin et medecin viendront se brancher sur ce socle.</p>
+            </div>
+        </footer>
+    </main>
+{% endblock %}

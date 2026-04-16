@@ -1,0 +1,20 @@
+{% set icon_map = {
+    success: 'bi-check-circle',
+    warning: 'bi-exclamation-triangle',
+    danger: 'bi-x-circle',
+    info: 'bi-info-circle',
+    primary: 'bi-stars'
+} %}
+
+{% for label, messages in app.flashes %}
+    {% set normalized_label = label == 'error' ? 'danger' : label %}
+
+    {% for message in messages %}
+        <div class="portal-alert portal-alert--{{ normalized_label }}">
+            <span class="portal-alert__icon" aria-hidden="true">
+                <i class="bi {{ icon_map[normalized_label]|default('bi-info-circle') }}"></i>
+            </span>
+            <div class="portal-alert__content">{{ message }}</div>
+        </div>
+    {% endfor %}
+{% endfor %}

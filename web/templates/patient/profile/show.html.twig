@@ -1,0 +1,188 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% form_theme profileForm 'bootstrap_5_layout.html.twig' %}
+
+{% block title %}Mon profil | MediRDV{% endblock %}
+
+{% block portal_title %}Mon profil{% endblock %}
+{% block portal_summary %}Consultez vos informations personnelles, vos indicateurs de suivi et accedez rapidement a la modification de votre compte.{% endblock %}
+
+{% block portal_header_actions %}
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#profileEditModal">
+            <i class="bi bi-pencil-square me-2"></i>Modifier mes informations
+        </button>
+        <a class="btn btn-outline-secondary shadow-sm" href="{{ path('patient_appointments') }}">
+            <i class="bi bi-calendar2-check me-2"></i>Voir Mes RDV
+        </a>
+    </div>
+{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <article class="portal-kpi h-100">
+                    <div class="portal-kpi__icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div>
+                        <p class="portal-kpi__label">Rendez-vous total</p>
+                        <p class="portal-kpi__value mb-0">{{ appointmentCount }}</p>
+                    </div>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="portal-kpi h-100">
+                    <div class="portal-kpi__icon">
+                        <i class="bi bi-journal-medical"></i>
+                    </div>
+                    <div>
+                        <p class="portal-kpi__label">Dossiers medicaux</p>
+                        <p class="portal-kpi__value mb-0">{{ recordCount }}</p>
+                    </div>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="portal-kpi h-100">
+                    <div class="portal-kpi__icon">
+                        <i class="bi bi-calendar2-check"></i>
+                    </div>
+                    <div>
+                        <p class="portal-kpi__label">Prochain RDV</p>
+                        <p class="portal-kpi__value mb-0">{{ nextAppointment ? nextAppointment.dateTime|date('d/m/Y') : 'Aucun' }}</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="portal-section">
+        <div class="row g-4">
+            <div class="col-xl-7">
+                <div class="portal-panel h-100 border-0 shadow-sm">
+                    <div class="portal-section__header mb-3">
+                        <div>
+                            <p class="text-uppercase text-soft small fw-semibold mb-2">Informations personnelles</p>
+                            <h2 class="section-title h4 mb-0">{{ patient.fullName }}</h2>
+                        </div>
+                    </div>
+
+                    <dl class="profile-data-list">
+                        <div>
+                            <dt>Email</dt>
+                            <dd>{{ patient.email }}</dd>
+                        </div>
+                        <div>
+                            <dt>Telephone</dt>
+                            <dd>{{ patient.phone ?: 'Non renseigne' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Date de naissance</dt>
+                            <dd>{{ patient.dateOfBirth ? patient.dateOfBirth|date('d/m/Y') : 'Non renseignee' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Genre</dt>
+                            <dd>{{ patient.gender ? patient.gender.label : 'Non renseigne' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Adresse</dt>
+                            <dd>{{ patient.address ?: 'Non renseignee' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Statut du compte</dt>
+                            <dd>
+                                <span class="status-badge {{ patient.isActive ? 'status-badge--success' : 'status-badge--neutral' }}">
+                                    {% if patient.isActive %}
+                                        <i class="bi bi-check-circle-fill"></i> Compte actif
+                                    {% else %}
+                                        <i class="bi bi-dash-circle-fill"></i> Compte inactif
+                                    {% endif %}
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="col-xl-5">
+                <div class="portal-panel h-100 border-0 shadow-sm">
+                    <p class="text-uppercase text-soft small fw-semibold mb-2">Raccourcis</p>
+                    <h2 class="section-title h4 mb-3">Acces rapides</h2>
+
+                    <div class="record-list">
+                        <article class="record-card record-card--compact">
+                            <strong>Modifier mes informations</strong>
+                            <p class="text-soft mb-3">Mettez a jour votre email, telephone ou adresse depuis le formulaire dedie.</p>
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#profileEditModal">
+                                Ouvrir le formulaire
+                            </button>
+                        </article>
+
+                        <article class="record-card record-card--compact">
+                            <strong>Consulter le suivi medical</strong>
+                            <p class="text-soft mb-3">
+                                {% if latestRecord %}
+                                    Dernier dossier disponible le {{ latestRecord.completedAt ? latestRecord.completedAt|date('d/m/Y') : latestRecord.appointment.dateTime|date('d/m/Y') }}.
+                                {% else %}
+                                    Aucun dossier medical n est encore disponible.
+                                {% endif %}
+                            </p>
+                            <a class="btn btn-outline-primary" href="{{ path('patient_records') }}">Voir le dossier medical</a>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Form -->
+    <div class="modal fade" id="profileEditModal" tabindex="-1" aria-labelledby="profileEditModalLabel" aria-hidden="true" {{ profileForm.vars.submitted and not profileForm.vars.valid ? 'data-bs-backdrop="static" data-bs-keyboard="false"' : '' }}>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title h4 fw-bold" id="profileEditModalLabel">Mettre a jour mes informations</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-4">
+                    {{ form_start(profileForm, { attr: { class: 'row g-3' } }) }}
+                        <div class="col-md-6">
+                            {{ form_row(profileForm.firstName) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(profileForm.lastName) }}
+                        </div>
+                        <div class="col-12">
+                            {{ form_row(profileForm.email) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(profileForm.phone) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(profileForm.dateOfBirth) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(profileForm.gender) }}
+                        </div>
+                        <div class="col-12">
+                            {{ form_row(profileForm.address) }}
+                        </div>
+                        <div class="col-12 d-flex flex-wrap gap-3 pt-3 mt-4 border-top">
+                            <button type="submit" class="btn btn-primary px-4 py-2">Enregistrer les changements</button>
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Annuler</button>
+                        </div>
+                    {{ form_end(profileForm) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if profileForm.vars.submitted and not profileForm.vars.valid %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var profileModal = new bootstrap.Modal(document.getElementById('profileEditModal'));
+                profileModal.show();
+            });
+        </script>
+    {% endif %}
+{% endblock %}

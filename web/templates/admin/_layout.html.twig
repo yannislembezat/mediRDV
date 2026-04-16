@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+
+{% block body_class %}portal-body portal-body--admin{% endblock %}
+
+{% block body %}
+    {% set current_route = app.request.attributes.get('_route') ?? '' %}
+
+    <div class="portal-frame container-fluid px-3 px-lg-4 py-3 py-lg-4">
+        <div class="portal-sidebar-layout">
+            <aside class="portal-sidebar portal-sidebar--admin">
+                <a class="brand-lockup portal-sidebar__brand" href="{{ path('admin_dashboard') }}">
+                    <span class="brand-mark">
+                        <i class="bi bi-hospital"></i>
+                    </span>
+                    <span>
+                        <span class="brand-title">MediRDV</span>
+                        <span class="brand-subtitle">Administration</span>
+                    </span>
+                </a>
+
+                <nav class="portal-nav portal-nav--stacked" aria-label="Navigation administration">
+                    <a class="portal-nav-link {{ current_route == 'admin_dashboard' ? 'is-active' : '' }}" href="{{ path('admin_dashboard') }}">Dashboard</a>
+                    <a class="portal-nav-link {{ current_route starts with 'admin_appointment' or current_route == 'admin_appointments' ? 'is-active' : '' }}" href="{{ path('admin_appointments') }}">Rendez-vous</a>
+                    <a class="portal-nav-link {{ current_route starts with 'admin_medecin' or current_route == 'admin_medecins' ? 'is-active' : '' }}" href="{{ path('admin_medecins') }}">Medecins</a>
+                    <a class="portal-nav-link {{ current_route starts with 'admin_availability' ? 'is-active' : '' }}" href="{{ path('admin_availability') }}">Disponibilites</a>
+                </nav>
+
+                <div class="portal-sidebar__footer">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-bell text-primary"></i>
+                        <span class="small fw-semibold">Notifications</span>
+                        {% if portal_unread_notifications is defined and portal_unread_notifications > 0 %}
+                            <span class="badge bg-danger rounded-pill">{{ portal_unread_notifications }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="small mb-2 opacity-75">{{ app.user ? app.user.fullName : 'Administration MediRDV' }}</p>
+                    {% include 'shared/_logout_form.html.twig' with {
+                        form_class: 'logout-inline',
+                        button_class: 'btn btn-light w-100',
+                        button_label: 'Se deconnecter',
+                        button_icon: 'bi bi-box-arrow-right'
+                    } only %}
+                </div>
+            </aside>
+
+            <div class="portal-main-stack w-100 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <p class="text-uppercase text-soft small fw-semibold mb-1">{% block portal_kicker %}Administration{% endblock %}</p>
+                        <h1 class="h3 fw-bold text-dark mb-1">{% block portal_title %}{% endblock %}</h1>
+                        <p class="text-secondary mb-0">{% block portal_summary %}{% endblock %}</p>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        {% if portal_notifications is defined and portal_notifications is not empty %}
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border-0 shadow-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                                    <i class="bi bi-bell fs-5 text-primary"></i>
+                                    {% if portal_unread_notifications is defined and portal_unread_notifications > 0 %}
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                                            {{ portal_unread_notifications }}
+                                            <span class="visually-hidden">Notifications non lues</span>
+                                        </span>
+                                    {% endif %}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 notification-dropdown" style="min-width: 350px; max-height: 500px; overflow-y: auto;">
+                                    {% for notification in portal_notifications|slice(0, 6) %}
+                                        <li class="px-0">
+                                            <div class="notification-item dropdown-item py-3 px-3 {{ notification.isRead ? 'is-read' : '' }}" data-notification-id="{{ notification.id }}">
+                                                <div class="d-flex gap-3">
+                                                    <div class="notification-icon flex-shrink-0">
+                                                        <i class="bi bi-info-circle text-primary"></i>
+                                                    </div>
+                                                    <div class="notification-content flex-grow-1">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <h6 class="mb-1 fw-semibold notification-title">{{ notification.title }}</h6>
+                                                            <small class="text-nowrap text-soft notification-date">{{ notification.createdAt|date('d/m') }}</small>
+                                                        </div>
+                                                        <p class="mb-1 text-muted small notification-message">{{ notification.message }}</p>
+                                                        <span class="badge {{ notification.isRead ? 'bg-light text-muted' : 'bg-primary' }}">{{ notification.typeLabel }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        {% block portal_header_actions %}
+                            <div class="d-flex flex-wrap gap-2">
+                                <a class="btn btn-primary shadow-sm" href="{{ path('admin_medecins') }}">
+                                    <i class="bi bi-person-plus me-1"></i> Nouveau medecin
+                                </a>
+                                <a class="btn btn-outline-secondary shadow-sm" href="{{ path('admin_availability_add') }}">
+                                    <i class="bi bi-calendar-plus me-1"></i> Ajouter un creneau
+                                </a>
+                            </div>
+                        {% endblock %}
+                    </div>
+                </div>
+
+                {% include 'shared/_flashes.html.twig' %}
+
+                <main class="portal-main-full w-100">
+                    {% block portal_content %}{% endblock %}
+                </main>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% form_theme doctorForm 'bootstrap_5_layout.html.twig' %}
+
+{{ form_start(doctorForm, { attr: { class: 'row g-3' } }) }}
+    <div class="col-md-6">
+        {{ form_row(doctorForm.firstName) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.lastName) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(doctorForm.email) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.plainPassword.first) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.plainPassword.second) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.phone) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.dateOfBirth) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.gender) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.address) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.specialty) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.officeLocation) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.consultationDuration) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(doctorForm.yearsExperience) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(doctorForm.diploma) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(doctorForm.bio) }}
+    </div>
+    <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+        <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+        <a class="btn btn-outline-primary" href="{{ cancel_path }}">Annuler</a>
+    </div>
+{{ form_end(doctorForm) }}

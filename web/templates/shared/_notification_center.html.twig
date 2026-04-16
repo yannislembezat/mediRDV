@@ -1,0 +1,67 @@
+<section id="{{ panelId|default('notifications') }}" class="portal-panel notification-panel" data-controller="notification">
+    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+        <div>
+            <p class="text-uppercase text-soft small fw-semibold mb-2">Suivi</p>
+            <h2 class="h5 mb-0">{{ panelTitle|default('Notifications') }}</h2>
+        </div>
+        <span class="notification-counter" data-notification-target="counter">{{ unreadCount|default(0) }}</span>
+    </div>
+
+    <div class="notification-filters">
+        <button
+            type="button"
+            class="notification-filter is-active"
+            data-notification-target="filterButton"
+            data-notification-filter-param="all"
+            data-action="notification#filter"
+        >
+            Toutes
+        </button>
+        <button
+            type="button"
+            class="notification-filter"
+            data-notification-target="filterButton"
+            data-notification-filter-param="unread"
+            data-action="notification#filter"
+        >
+            Non lues
+        </button>
+    </div>
+
+    <div class="notification-list">
+        {% for notification in notifications %}
+            <article
+                class="notification-card {{ notification.isRead ? 'is-read' : '' }}"
+                data-notification-target="item"
+                data-notification-state="{{ notification.isRead ? 'read' : 'unread' }}"
+            >
+                <div class="d-flex align-items-start justify-content-between gap-3">
+                    <div>
+                        <h3 class="h6 mb-1">{{ notification.title }}</h3>
+                        <p class="text-soft small mb-0">{{ notification.message }}</p>
+                    </div>
+
+                    {{ component('shared:status_badge', { status: notification.isRead ? 'read' : 'unread' }) }}
+                </div>
+
+                <div class="notification-card__footer">
+                    <small class="text-soft">{{ notification.createdAt|date('d/m/Y H:i') }}</small>
+                    <div class="notification-card__actions">
+                        {% if not notification.isRead %}
+                            <button type="button" class="btn btn-sm btn-link px-0" data-action="notification#markRead">Marquer comme lue</button>
+                        {% endif %}
+                        <button type="button" class="btn btn-sm btn-link px-0 text-soft" data-action="notification#dismiss">Masquer</button>
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+
+        <div class="{{ notifications is not empty ? 'd-none' : '' }}" data-notification-target="empty">
+            {{ component('shared:empty_state', {
+                icon: 'bi-bell-slash',
+                title: emptyTitle|default('Aucune notification recente'),
+                message: emptyMessage|default('Les prochains evenements du workflow s afficheront ici.')
+            }) }}
+        </div>
+    </div>
+</section>

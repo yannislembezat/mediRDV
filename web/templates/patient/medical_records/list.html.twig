@@ -1,0 +1,59 @@
+{% extends 'patient/_layout.html.twig' %}
+
+{% block title %}Dossier medical | MediRDV{% endblock %}
+
+{% block portal_title %}Mon dossier medical{% endblock %}
+{% block portal_summary %}Retrouvez l historique de vos consultations completees, les notes du medecin et les ordonnances associees.{% endblock %}
+
+{% block portal_content %}
+    <section class="portal-section">
+        <div class="portal-section__header">
+            <div>
+                <p class="text-uppercase text-soft small fw-semibold mb-2">Historique</p>
+                <h2 class="section-title mb-0">{{ records|length }} consultation(s) completee(s)</h2>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" href="{{ path('patient_appointments') }}">Voir aussi Mes RDV</a>
+        </div>
+
+        {% if records is not empty %}
+            <div class="record-list">
+                {% for record in records %}
+                    <article class="record-card">
+                        <div class="record-card__header">
+                            <div>
+                                <p class="portal-info-tile__label mb-1">Consultation</p>
+                                <h3 class="h5 mb-1">{{ record.appointment.medecin.displayName }}</h3>
+                                <p class="text-soft mb-0">{{ record.appointment.medecin.specialty.name }} • {{ record.completedAt ? record.completedAt|date('d/m/Y H:i') : record.appointment.dateTime|date('d/m/Y H:i') }}</p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="soft-badge">
+                                    <i class="bi bi-journal-medical"></i>
+                                    Dossier complet
+                                </span>
+                                <span class="soft-badge is-accent">
+                                    <i class="bi bi-capsule"></i>
+                                    {{ record.prescription ? record.prescription.items|length : 0 }} medicament(s)
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="record-card__excerpt">
+                            {{ record.diagnosis ?: (record.notes ?: 'Le detail de la consultation est disponible dans la fiche complete.') }}
+                        </p>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-outline-primary btn-sm" href="{{ path('patient_record_show', { id: record.id }) }}">Voir le detail</a>
+                            <a class="btn btn-link btn-sm px-0" href="{{ path('patient_appointment_show', { id: record.appointment.id }) }}">Voir le rendez-vous lie</a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ component('shared:empty_state', {
+                icon: 'bi-journal-medical',
+                title: 'Aucun dossier medical disponible',
+                message: 'Les consultations finalisees par le medecin apparaitront ici avec les notes et les ordonnances.'
+            }) }}
+        {% endif %}
+    </section>
+{% endblock %}

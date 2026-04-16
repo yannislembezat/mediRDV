@@ -1,0 +1,43 @@
+{% set initials = (doctor.user.firstName|slice(0, 1) ~ doctor.user.lastName|slice(0, 1))|upper %}
+{% set fallback_summary = 'Profil medecin pret a etre detaille dans le prochain chantier web.' %}
+{% set resolved_summary = summary ?? (doctor.bio ?: fallback_summary) %}
+{% set excerpt = resolved_summary|length > 160 ? resolved_summary|slice(0, 157) ~ '...' : resolved_summary %}
+{% set fallback_tags = [
+    doctor.officeLocation ?: 'Cabinet a confirmer',
+    doctor.consultationDuration ~ ' min',
+    doctor.yearsExperience ? doctor.yearsExperience ~ ' ans d experience' : 'Experience a confirmer'
+] %}
+{% set resolved_tags = tags is not empty ? tags : fallback_tags %}
+
+<article class="doctor-card">
+    <div class="doctor-card__header">
+        <div class="doctor-card__avatar" aria-hidden="true">{{ initials }}</div>
+        <div>
+            <div class="doctor-card__title-row">
+                <h3 class="doctor-card__title">{{ doctor.displayName }}</h3>
+                {% if doctor.specialty.icon %}
+                    <span class="doctor-card__icon"><i class="bi {{ doctor.specialty.icon }}"></i></span>
+                {% endif %}
+            </div>
+            <p class="doctor-card__subtitle">{{ doctor.specialty.name }}</p>
+        </div>
+    </div>
+
+    <p class="doctor-card__summary">{{ excerpt }}</p>
+
+    <div class="doctor-card__tags">
+        {% for tag in resolved_tags %}
+            <span class="doctor-card__tag">{{ tag }}</span>
+        {% endfor %}
+    </div>
+
+    {% if actionLabel %}
+        <div class="doctor-card__actions">
+            {% if actionHref %}
+                <a class="btn btn-outline-primary" href="{{ actionHref }}">{{ actionLabel }}</a>
+            {% else %}
+                <span class="btn btn-outline-primary disabled">{{ actionLabel }}</span>
+            {% endif %}
+        </div>
+    {% endif %}
+</article>

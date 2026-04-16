@@ -1,0 +1,20 @@
+{% set status_value = status is same as(null) ? '' : (status.value is defined ? status.value : status) %}
+{% set default_label = status is same as(null) ? '' : (status.label is defined ? status.label : status_value|replace({'_': ' '})|title) %}
+{% set config_map = {
+    pending: { label: 'En attente', tone: 'warning', icon: 'bi-hourglass-split' },
+    confirmed: { label: 'Confirme', tone: 'success', icon: 'bi-check-circle' },
+    refused: { label: 'Refuse', tone: 'danger', icon: 'bi-x-circle' },
+    completed: { label: 'Complete', tone: 'neutral', icon: 'bi-journal-check' },
+    cancelled: { label: 'Annule', tone: 'muted', icon: 'bi-slash-circle' },
+    unread: { label: 'Non lue', tone: 'info', icon: 'bi-bell' },
+    read: { label: 'Lue', tone: 'muted', icon: 'bi-bell-slash' }
+} %}
+{% set config = config_map[status_value]|default({}) %}
+{% set resolved_tone = tone ?? config.tone|default('neutral') %}
+{% set resolved_icon = icon ?? config.icon|default('bi-circle-fill') %}
+{% set resolved_label = label ?? config.label|default(default_label) %}
+
+<span class="status-badge status-badge--{{ resolved_tone }}">
+    <i class="bi {{ resolved_icon }}" aria-hidden="true"></i>
+    <span>{{ resolved_label }}</span>
+</span>
